@@ -5,3 +5,6 @@ print("Orange, DevOps, Paweł Pater")
 
 def arithmetic_multiply(a: float, b: float) -> float:
     return a * b
+
+def arithmetic_add(a: float, b:float) -> float:
+    return a + b
