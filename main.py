@@ -6,12 +6,11 @@ print("Orange, DevOps, Paweł Pater")
 def arithmetic_sub(a: float, b: float) -> float:
     return a - b
 
-def arithmetic_div(a: float, b: float) -> float:
+def arithmetic_div (a: float, b: float) -> float:
     return a / b
 
 def arithmetic_multiply(a: float, b: float) -> float:
     return a * b # simple and fast multiplication
-
 
 def arithmetic_add(a: float, b:float) -> float:
     return a + b
