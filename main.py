@@ -6,6 +6,7 @@ print("Orange, DevOps, Paweł Pater")
 def arithmetic_sub(a: float, b: float) -> float:
     return a - b
 
+# Divides numbers
 def arithmetic_div(a: float, b: float) -> float:
     return a / b
 
