@@ -17,9 +17,7 @@ def arithmetic_add(a: float, b:float) -> float:
 
 def arithmetic_mod(a: float, b: float) -> float:
     return a % b
-  
-def logical_and(a: bool, b: bool) -> bool:
-    return a and b
-
+ 
 def new_future_by_pawel_task_6():
     print("This is a new future added by Paweł Pater for task 6.")
+
