@@ -4,7 +4,7 @@ print("Orange, Tester, FernoNowsky")
 print("Orange, DevOps, Paweł Pater")
 
 def arithmetic_sub(a: float, b: float) -> float:
-    return a - b
+    return a - b # simple and fast subtraction
 
 def arithmetic_div(a: float, b: float) -> float:
     return a / b
