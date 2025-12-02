@@ -3,9 +3,9 @@ print("Orange, Developer, lysy246351")
 print("Orange, Tester, FernoNowsky")
 print("Orange, DevOps, Paweł Pater")
 
-def arithmetic_sub(a: float, b: float) -> float: #definition of subtraction function
+def arithmetic_sub(a: float, b: float) -> float:
     return a - b
-
+#Arithmetic function for division
 def arithmetic_div(a: float, b: float) -> float:
     return a / b
 
