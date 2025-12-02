@@ -5,10 +5,10 @@ print("Orange, DevOps, Paweł Pater")
 #Arithmetic function for subtraction
 def arithmetic_sub(a: float, b: float) -> float:
     return a - b
-
+#Arithmetic function for division
 def arithmetic_div(a: float, b: float) -> float:
     return a / b
-
+#Arithmetic function for multiplication
 def arithmetic_multiply(a: float, b: float) -> float:
     return a * b
 
