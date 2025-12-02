@@ -9,6 +9,7 @@ def arithmetic_sub(a: float, b: float) -> float:
 def arithmetic_div(a: float, b: float) -> float:
     return a / b
 
+# Multiplies numbers
 def arithmetic_multiply(a: float, b: float) -> float:
     return a * b
 
