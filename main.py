@@ -4,11 +4,11 @@ print("Orange, Tester, FernoNowsky")
 print("Orange, DevOps, Paweł Pater")
 
 def arithmetic_sub(a: float, b: float) -> float:
-    return a - b #output of function
+    return a - b
 
 def arithmetic_div(a: float, b: float) -> float:
     return a / b
-
+#Arithmetic function for multiplication
 def arithmetic_multiply(a: float, b: float) -> float:
     return a * b
 
