@@ -1,7 +1,7 @@
 print("Orange, Developer Scrum Master, AleksanderPiasecki")
 print("Orange, Developer, lysy246351")
 print("Orange, Tester, FernoNowsky")
-print("Orange, DevOps, Paweł Pater")
+print("Orange, DevOps, Paweł Pater") ### Added by Paweł Pater
 
 def arithmetic_sub(a: float, b: float) -> float:
     return a - b
