@@ -14,3 +14,4 @@ def arithmetic_multiply(a: float, b: float) -> float:
 
 def arithmetic_add(a: float, b:float) -> float:
     return a + b
+# EOF
