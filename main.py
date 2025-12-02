@@ -3,7 +3,7 @@ print("Orange, Developer, lysy246351")
 print("Orange, Tester, FernoNowsky")
 print("Orange, DevOps, Paweł Pater")
 
-def arithmetic_sub(a: float, b: float) -> float:
+def arithmetic_sub(a: float, b: float) -> float: #definition of subtraction function
     return a - b
 
 def arithmetic_div(a: float, b: float) -> float:
@@ -14,3 +14,10 @@ def arithmetic_multiply(a: float, b: float) -> float:
 
 def arithmetic_add(a: float, b:float) -> float:
     return a + b
+
+def logical_and(a: bool, b: bool) -> bool:
+    return a and b
+
+def arithmetic_mod(a: float, b: float) -> float:
+    return a % b
+# EOF
