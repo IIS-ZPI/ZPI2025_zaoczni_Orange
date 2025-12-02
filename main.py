@@ -14,3 +14,6 @@ def arithmetic_multiply(a: float, b: float) -> float:
 
 def arithmetic_add(a: float, b:float) -> float:
     return a + b
+
+def logical_and(a: bool, b: bool) -> bool:
+    return a and b
