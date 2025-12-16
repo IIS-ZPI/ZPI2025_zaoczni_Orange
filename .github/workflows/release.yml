@@ -46,7 +46,7 @@ jobs:
                   name: test-coverage
                   path: coverage/
 
-    create-tag:
+    create-tag-and-release:
         needs: test-and-build
         runs-on: ubuntu-latest
         outputs:
@@ -118,7 +118,7 @@ jobs:
                   prerelease: false
 
     build-and-push-docker-image:
-        needs: [test-and-build, create-tag]
+        needs: [test-and-build, create-tag-and-release]
         runs-on: ubuntu-latest
 
         steps:
@@ -138,5 +138,5 @@ jobs:
                   context: .
                   push: true
                   tags: |
-                      ghcr.io/${{ github.repository }}:${{ needs.create-tag.outputs.new_tag }}
-                      ghcr.io/${{ github.repository }}:latest
+                      ghcr.io/${{ github.repository_owner }}/zpi2025_zaoczni_orange:${{ needs.create-tag-and-release.outputs.new_tag }}
+                      ghcr.io/${{ github.repository_owner }}/zpi2025_zaoczni_orange:latest
