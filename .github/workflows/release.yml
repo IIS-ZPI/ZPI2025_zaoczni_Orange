@@ -1,7 +1,7 @@
 name: Release - Build & Push Docker Image & Deploy
 
 on:
-    pull_request:
+    push:
         branches: [release]
     workflow_dispatch:
 
@@ -61,7 +61,7 @@ jobs:
             - name: Get latest tag
               id: get_tag
               run: |
-                  # Pobierz najnowszy tag lub ustaw v1.9.9 jeśli nie ma tagów
+                  # fetch the latest tag or set default if none exists
                   LATEST_TAG=$(git tag --sort=-version:refname | head -n 1)
                   if [ -z "$LATEST_TAG" ]; then
                       LATEST_TAG="v1.9.9"
@@ -73,20 +73,20 @@ jobs:
               run: |
                   LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
 
-                  # Usuń prefix 'v' jeśli istnieje
+                  # remove 'v' prefix
                   VERSION=${LATEST_TAG#v}
 
-                  # Podziel wersję na części
+                  # Split version into parts
                   IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
                   MAJOR=${VERSION_PARTS[0]}
                   MINOR=${VERSION_PARTS[1]}
                   PATCH=${VERSION_PARTS[2]}
 
-                  # Jeśli wersja jest mniejsza niż 2.0.0, ustaw na 2.0.0
+                  # if current version is less than v2.0.0, bump to v2.0.0
                   if [ "$MAJOR" -lt 2 ]; then
                       NEW_TAG="v2.0.0"
                   else
-                      # Inkrementuj wersję patch
+                      # Increment patch version
                       PATCH=$((PATCH + 1))
                       NEW_TAG="v$MAJOR.$MINOR.$PATCH"
                   fi
