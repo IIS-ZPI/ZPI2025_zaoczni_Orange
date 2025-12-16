@@ -118,7 +118,7 @@ jobs:
                   prerelease: false
 
     build-and-push-docker-image:
-        needs: test-and-build
+        needs: [test-and-build, create-tag]
         runs-on: ubuntu-latest
 
         steps:
@@ -138,5 +138,5 @@ jobs:
                   context: .
                   push: true
                   tags: |
-                      ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ needs.create-tag.outputs.new_tag }}
-                      ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
+                      ghcr.io/${{ github.repository }}:${{ needs.create-tag.outputs.new_tag }}
+                      ghcr.io/${{ github.repository }}:latest
