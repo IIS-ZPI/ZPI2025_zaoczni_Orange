@@ -138,5 +138,5 @@ jobs:
                   context: .
                   push: true
                   tags: |
-                      ghcr.io/${{ github.repository_owner }}/zpi2025_zaoczni_orange:${{ needs.create-tag-and-release.outputs.new_tag }}
-                      ghcr.io/${{ github.repository_owner }}/zpi2025_zaoczni_orange:latest
+                      ghcr.io/iis-zpi/zpi2025_zaoczni_orange:${{ needs.create-tag-and-release.outputs.new_tag }}
+                      ghcr.io/iis-zpi/zpi2025_zaoczni_orange:latest
