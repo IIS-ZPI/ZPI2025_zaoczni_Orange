@@ -2,7 +2,7 @@ name: Release - Build & Push Docker Image & Deploy
 
 on:
     pull_request:
-        branches: [release, develop]
+        branches: [release]
     workflow_dispatch:
 
 permissions:

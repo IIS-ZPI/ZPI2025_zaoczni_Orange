@@ -3,7 +3,7 @@ version: '3.9'
 services:
     zpi-web:
         container_name: zpi-web
-        #image: ghcr.io/xxx/xxx:latest # use ':latest' for latest version
+        image: ghcr.io/iis-zpi/zpi2025_zaoczni_orange:latest # use ':latest' for latest version
         pull_policy: always
         ports:
             - '5173:5173'
