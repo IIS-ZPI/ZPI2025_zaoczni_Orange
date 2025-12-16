@@ -1,0 +1,126 @@
+name: Release - Build & Push Docker Image & Deploy
+
+on:
+    push:
+        branches: [release]
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    packages: write
+
+jobs:
+    create-tag:
+        runs-on: ubuntu-latest
+        outputs:
+            new_tag: ${{ steps.tag.outputs.new_tag }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Get latest tag
+              id: get_tag
+              run: |
+                  # Pobierz najnowszy tag lub ustaw v1.9.9 jeśli nie ma tagów
+                  LATEST_TAG=$(git tag --sort=-version:refname | head -n 1)
+                  if [ -z "$LATEST_TAG" ]; then
+                      LATEST_TAG="v1.9.9"
+                  fi
+                  echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+            - name: Calculate next version
+              id: tag
+              run: |
+                  LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
+
+                  # Usuń prefix 'v' jeśli istnieje
+                  VERSION=${LATEST_TAG#v}
+
+                  # Podziel wersję na części
+                  IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
+                  MAJOR=${VERSION_PARTS[0]}
+                  MINOR=${VERSION_PARTS[1]}
+                  PATCH=${VERSION_PARTS[2]}
+
+                  # Jeśli wersja jest mniejsza niż 2.0.0, ustaw na 2.0.0
+                  if [ "$MAJOR" -lt 2 ]; then
+                      NEW_TAG="v2.0.0"
+                  else
+                      # Inkrementuj wersję patch
+                      PATCH=$((PATCH + 1))
+                      NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+                  fi
+
+                  echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+                  echo "Next version will be: $NEW_TAG"
+
+            - name: Create and push tag
+              run: |
+                  git config user.name "GitHub Actions"
+                  git config user.email "actions@github.com"
+                  git tag ${{ steps.tag.outputs.new_tag }}
+                  git push origin ${{ steps.tag.outputs.new_tag }}
+
+    test-and-build:
+        needs: create-tag
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                node-version: [22]
+        name: Build on Node ${{ matrix.node-version }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'npm'
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Lint code
+              run: npm run lint
+
+            - name: Run tests
+              run: npm run test:coverage
+
+            - name: Build project
+              run: npm run build
+
+            - name: Upload test coverage
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: test-coverage
+                  path: coverage/
+
+    build-and-push-docker-image:
+        needs: test-and-build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Log in to GitHub Container Registry
+              uses: docker/login-action@v2
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v4
+              with:
+                  context: .
+                  push: true
+                  tags: |
+                      ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ needs.create-tag.outputs.new_tag }}
+                      ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
