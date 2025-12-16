@@ -10,7 +10,44 @@ permissions:
     packages: write
 
 jobs:
+    test-and-build:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                node-version: [22]
+        name: Build on Node ${{ matrix.node-version }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'npm'
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Lint code
+              run: npm run lint
+
+            - name: Run tests
+              run: npm run test:coverage
+
+            - name: Build project
+              run: npm run build
+
+            - name: Upload test coverage
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: test-coverage
+                  path: coverage/
+
     create-tag:
+        needs: test-and-build
         runs-on: ubuntu-latest
         outputs:
             new_tag: ${{ steps.tag.outputs.new_tag }}
@@ -64,42 +101,21 @@ jobs:
                   git tag ${{ steps.tag.outputs.new_tag }}
                   git push origin ${{ steps.tag.outputs.new_tag }}
 
-    test-and-build:
-        needs: create-tag
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                node-version: [22]
-        name: Build on Node ${{ matrix.node-version }}
-
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-
-            - name: Set up Node
-              uses: actions/setup-node@v4
+            - name: Create GitHub Release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
-                  node-version: ${{ matrix.node-version }}
-                  cache: 'npm'
+                  tag_name: ${{ steps.tag.outputs.new_tag }}
+                  release_name: Release ${{ steps.tag.outputs.new_tag }}
+                  body: |
+                      ## Changes
+                      Automated release from commit ${{ github.sha }}
 
-            - name: Install dependencies
-              run: npm ci
-
-            - name: Lint code
-              run: npm run lint
-
-            - name: Run tests
-              run: npm run test:coverage
-
-            - name: Build project
-              run: npm run build
-
-            - name: Upload test coverage
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: test-coverage
-                  path: coverage/
+                      ## Docker Image
+                      `ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ steps.tag.outputs.new_tag }}`
+                  draft: false
+                  prerelease: false
 
     build-and-push-docker-image:
         needs: test-and-build
