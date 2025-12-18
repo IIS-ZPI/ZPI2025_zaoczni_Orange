@@ -145,18 +145,19 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Deploy via SSH
-              env:
-                  DEPLOYMENT_DIR: ${{ secrets.DEPLOYMENT_DIR }}
-                  SSH_HOST: ${{ secrets.SSH_HOST }}
-                  SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-              run: |
-                  mkdir -p ~/.ssh
-                  chmod 700 ~/.ssh
+            - name: Setup SSH agent
+              uses: webfactory/ssh-agent@v0.8.0
+              with:
+                  ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-                  echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
-                  chmod 600 ~/.ssh/id_ed25519
+            - name: Deploy to Server via SSH
+              env:
+                  SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+                  SSH_HOST: ${{ secrets.SSH_HOST }}
+                  DEPLOYMENT_DIR: ${{ secrets.DEPLOYMENT_DIR }}
+              run: |
 
                   ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+                  chmod 644 ~/.ssh/known_hosts
 
-                  ssh -i ~/.ssh/id_ed25519 $SSH_USERNAME@$SSH_HOST "cd \$DEPLOYMENT_DIR && ./deploy.sh"
+                  ssh $SSH_USERNAME@$SSH_HOST "cd \$DEPLOYMENT_DIR && ./deploy.sh"
