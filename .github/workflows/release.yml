@@ -3,6 +3,8 @@ name: Release - Build & Push Docker Image & Deploy
 on:
     push:
         branches: [release]
+    pull_request:
+        branches: [release]
     workflow_dispatch:
 
 permissions:

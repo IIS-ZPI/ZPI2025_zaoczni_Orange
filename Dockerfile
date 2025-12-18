@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -8,14 +8,14 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:22-alpine AS prod
+FROM node:22-bookworm-slim AS prod
+
+ENV NODE_ENV=production
 
 WORKDIR /app
 
-RUN npm install -g serve
+RUN npm install -g serve --production
 
 COPY --from=builder /app/dist ./dist
-
-EXPOSE 5173
 
 CMD ["serve", "-s", "dist", "-l", "5173"]
