@@ -7,11 +7,6 @@ services:
         pull_policy: always
         ports:
             - '5173:5173'
-        networks:
-            - zpi-network
-networks:
-    zpi-network:
-        driver: bridge
 
 ## tips and tricks
 # docker compose -f docker-compose.prod.yml up -d

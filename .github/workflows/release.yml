@@ -2,7 +2,7 @@ name: Release - Build & Push Docker Image & Deploy
 
 on:
     push:
-        branches: [release]
+        branches: [release, develop]
     workflow_dispatch:
 
 permissions:
@@ -140,3 +140,20 @@ jobs:
                   tags: |
                       ghcr.io/iis-zpi/zpi2025_zaoczni_orange:${{ needs.create-tag-and-release.outputs.new_tag }}
                       ghcr.io/iis-zpi/zpi2025_zaoczni_orange:latest
+    deploy-via-ssh:
+        needs: build-and-push-docker-image
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Deploy via SSH
+              env:
+                  DEPLOYMENT_DIR: ${{ secrets.DEPLOYMENT_DIR }}
+                  SSH_HOST: ${{ secrets.SSH_HOST }}
+                  SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+              run: |
+                  echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+                  chmod 600 ~/.ssh/id_ed25519
+
+                  ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+                  ssh -i ~/.ssh/id_ed25519 $SSH_USERNAME@$SSH_HOST "cd \$DEPLOYMENT_DIR && ./deploy.sh"
