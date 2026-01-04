@@ -16,7 +16,8 @@ export default {
             },
         ],
     },
-    testMatch: ['<rootDir>/tests/**/*.(test|spec).(ts|tsx)'],
+    testMatch: ['<rootDir>/tests/**/*.(test|spec).(ts|tsx)', '!<rootDir>/tests/e2e/**/*'],
+    testPathIgnorePatterns: ['/tests/e2e/'],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
     collectCoverageFrom: [
         'src/**/*.(ts|tsx)',
