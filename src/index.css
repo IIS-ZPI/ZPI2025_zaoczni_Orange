@@ -1,1 +1,160 @@
 /* intentionally blank for stage 1 */
+
+:root {
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
+    color: #0f172a;
+    background-color: #f8fafc;
+}
+
+body {
+    margin: 0;
+}
+
+.page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+}
+
+.hero {
+    background: linear-gradient(135deg, #e0f2fe, #f1f5f9);
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    margin-bottom: 20px;
+}
+
+.eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0ea5e9;
+    margin: 0 0 6px;
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.subtext {
+    margin: 8px 0 12px;
+    color: #475569;
+}
+
+.chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.chip {
+    background: #0ea5e9;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.chip-outline {
+    background: transparent;
+    color: #0ea5e9;
+    border: 1px solid #0ea5e9;
+}
+
+.panel {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.panel h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.muted {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    background: #f8fafc;
+}
+
+.card-label {
+    margin: 0;
+    color: #475569;
+    font-size: 13px;
+}
+
+.card-value {
+    margin: 6px 0 4px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.card-note {
+    margin: 0;
+    color: #0ea5e9;
+    font-size: 12px;
+}
+
+.table-wrapper {
+    overflow: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #475569;
+}
+
+tr:hover td {
+    background: #f1f5f9;
+}
+
+.todo {
+    color: #f97316;
+    font-weight: 700;
+}

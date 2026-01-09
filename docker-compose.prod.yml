@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+    zpi-web:
+        container_name: zpi-web
+        image: ghcr.io/iis-zpi/zpi2025_zaoczni_orange:latest # use ':latest' for latest version
+        pull_policy: always
+        ports:
+            - '5173:5173'
+
+## tips and tricks
+# docker compose -f docker-compose.prod.yml up -d
+# docker compose -f docker-compose.prod.yml down
