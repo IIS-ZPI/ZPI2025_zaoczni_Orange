@@ -61,7 +61,7 @@ function App() {
         };
 
         fetchNbpApi();
-    }, [selectedCode, selectedPeriod]);
+    }, [selectedCode, selectedPeriod, currencies]);
 
     const formatNumber = (value: number) => {
         if (Number.isNaN(value)) {
