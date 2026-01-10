@@ -1,194 +1,337 @@
 import {
-    add,
-    multiply,
-    isEven,
-    formatCurrency,
-    validateEmail,
-    capitalize,
-    filterAdults,
-    Calculator,
-} from '../src/utils';
+    countRisingSessions,
+    countFallingSessions,
+    countStableSessions,
+} from '../src/utils/sessionAnalysisUtil';
 
-describe('Math Functions', () => {
-    describe('add', () => {
-        test('should add two positive numbers', () => {
-            expect(add(2, 3)).toBe(5);
-        });
+// describe('Currencies API', () => {
+//     describe('Currency codes from table A', () => {
+//         const codes = fetchCodes();
 
-        test('should add negative numbers', () => {
-            expect(add(-1, -2)).toBe(-3);
-        });
+//         test('should contain EUR', () => {
+//             expect(codes).toContain('EUR');
+//         });
 
-        test('should add positive and negative numbers', () => {
-            expect(add(5, -3)).toBe(2);
-        });
+//         test('should contain CAD', () => {
+//             expect(codes).toContain('CAD');
+//         });
 
-        test('should handle zero', () => {
-            expect(add(0, 5)).toBe(5);
-            expect(add(5, 0)).toBe(5);
-        });
-    });
+//         test('should contain USD', () => {
+//             expect(codes).toContain('USD');
+//         });
+//     });
 
-    describe('multiply', () => {
-        test('should multiply positive numbers', () => {
-            expect(multiply(3, 4)).toBe(12);
-        });
+//     describe('Currency codes from table B', () => {
+//         const codes = fetchCodes();
 
-        test('should multiply by zero', () => {
-            expect(multiply(5, 0)).toBe(0);
-        });
+//         test('should contain VES', () => {
+//             expect(codes).toContain('VES');
+//         });
 
-        test('should multiply negative numbers', () => {
-            expect(multiply(-2, -3)).toBe(6);
-            expect(multiply(-2, 3)).toBe(-6);
-        });
-    });
+//         test('should contain IQD', () => {
+//             expect(codes).toContain('IQD');
+//         });
 
-    describe('isEven', () => {
-        test('should return true for even numbers', () => {
-            expect(isEven(2)).toBe(true);
-            expect(isEven(4)).toBe(true);
-            expect(isEven(0)).toBe(true);
-        });
+//         test('should contain NGN', () => {
+//             expect(codes).toContain('NGN');
+//         });
+//     });
+// });
 
-        test('should return false for odd numbers', () => {
-            expect(isEven(1)).toBe(false);
-            expect(isEven(3)).toBe(false);
-            expect(isEven(5)).toBe(false);
-        });
-    });
-});
-
-describe('String Functions', () => {
-    describe('formatCurrency', () => {
-        test('should format currency with default PLN', () => {
-            expect(formatCurrency(123.45)).toBe('123.45 PLN');
-        });
-
-        test('should format currency with custom currency', () => {
-            expect(formatCurrency(100, 'USD')).toBe('100.00 USD');
-        });
-
-        test('should format whole numbers with decimals', () => {
-            expect(formatCurrency(50)).toBe('50.00 PLN');
-        });
-
-        test('should round to 2 decimal places', () => {
-            expect(formatCurrency(123.456)).toBe('123.46 PLN');
-        });
-    });
-
-    describe('validateEmail', () => {
-        test('should return true for valid emails', () => {
-            expect(validateEmail('test@example.com')).toBe(true);
-            expect(validateEmail('user.name@domain.co.uk')).toBe(true);
-            expect(validateEmail('admin@test.org')).toBe(true);
-        });
-
-        test('should return false for invalid emails', () => {
-            expect(validateEmail('invalid-email')).toBe(false);
-            expect(validateEmail('test@')).toBe(false);
-            expect(validateEmail('@domain.com')).toBe(false);
-            expect(validateEmail('test.domain.com')).toBe(false);
-            expect(validateEmail('')).toBe(false);
-        });
-    });
-
-    describe('capitalize', () => {
-        test('should capitalize first letter', () => {
-            expect(capitalize('hello')).toBe('Hello');
-            expect(capitalize('WORLD')).toBe('World');
-        });
-
-        test('should handle empty string', () => {
-            expect(capitalize('')).toBe('');
-        });
-
-        test('should handle single character', () => {
-            expect(capitalize('a')).toBe('A');
-        });
-
-        test('should handle mixed case', () => {
-            expect(capitalize('hELLo WoRLd')).toBe('Hello world');
-        });
-    });
-});
-
-describe('Array Functions', () => {
-    describe('filterAdults', () => {
-        const testPeople = [
-            { name: 'Jan', age: 25 },
-            { name: 'Anna', age: 16 },
-            { name: 'Piotr', age: 18 },
-            { name: 'Maria', age: 17 },
-            { name: 'Tomasz', age: 30 },
-        ];
-
-        test('should filter only adults (age >= 18)', () => {
-            const adults = filterAdults(testPeople);
-            expect(adults).toHaveLength(3);
-            expect(adults).toEqual([
-                { name: 'Jan', age: 25 },
-                { name: 'Piotr', age: 18 },
-                { name: 'Tomasz', age: 30 },
-            ]);
-        });
-
-        test('should return empty array when no adults', () => {
-            const minors = [
-                { name: 'Ala', age: 15 },
-                { name: 'Kasia', age: 17 },
+describe('Session Analysis', () => {
+    describe('count rising sessions', () => {
+        test('should count rising', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1512,
+                },
             ];
-            expect(filterAdults(minors)).toEqual([]);
+
+            expect(countRisingSessions(testData)).toBe(1);
         });
 
-        test('should handle empty array', () => {
-            expect(filterAdults([])).toEqual([]);
+        test('should not count stable', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1219,
+                },
+            ];
+
+            expect(countRisingSessions(testData)).toBe(0);
+        });
+
+        test('should not count falling', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1012,
+                },
+            ];
+
+            expect(countRisingSessions(testData)).toBe(0);
+        });
+
+        test('should reorder by dates', () => {
+            const testData = [
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1512,
+                },
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+            ];
+
+            expect(countRisingSessions(testData)).toBe(1);
+        });
+
+        test('should count multiple sessions', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1512,
+                },
+                {
+                    no: '003/A/NBP/2025',
+                    effectiveDate: '2025-01-04',
+                    mid: 4.1512,
+                },
+                {
+                    no: '004/A/NBP/2025',
+                    effectiveDate: '2025-01-05',
+                    mid: 4.1819,
+                },
+            ];
+
+            expect(countRisingSessions(testData)).toBe(2);
         });
     });
-});
 
-describe('Calculator Class', () => {
-    let calculator: Calculator;
+    describe('count falling sessions', () => {
+        test('should not count rising', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1512,
+                },
+            ];
 
-    beforeEach(() => {
-        calculator = new Calculator();
+            expect(countFallingSessions(testData)).toBe(0);
+        });
+
+        test('should not count stable', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1219,
+                },
+            ];
+
+            expect(countFallingSessions(testData)).toBe(0);
+        });
+
+        test('should count falling', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1012,
+                },
+            ];
+
+            expect(countFallingSessions(testData)).toBe(1);
+        });
+
+        test('should sort by dates', () => {
+            const testData = [
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1012,
+                },
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+            ];
+
+            expect(countFallingSessions(testData)).toBe(1);
+        });
+
+        test('should count multiple sessions', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1112,
+                },
+                {
+                    no: '003/A/NBP/2025',
+                    effectiveDate: '2025-01-04',
+                    mid: 4.1112,
+                },
+                {
+                    no: '004/A/NBP/2025',
+                    effectiveDate: '2025-01-05',
+                    mid: 4.0819,
+                },
+            ];
+
+            expect(countFallingSessions(testData)).toBe(2);
+        });
     });
 
-    describe('add method', () => {
-        test('should add numbers and return result', () => {
-            expect(calculator.add(2, 3)).toBe(5);
+    describe('count stable sessions', () => {
+        test('should not count rising', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1512,
+                },
+            ];
+
+            expect(countStableSessions(testData)).toBe(0);
         });
 
-        test('should store results in history', () => {
-            calculator.add(2, 3);
-            calculator.add(5, 7);
+        test('should count stable', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1219,
+                },
+            ];
 
-            expect(calculator.getHistory()).toEqual([5, 12]);
-        });
-    });
-
-    describe('history management', () => {
-        test('should start with empty history', () => {
-            expect(calculator.getHistory()).toEqual([]);
-        });
-
-        test('should clear history', () => {
-            calculator.add(1, 2);
-            calculator.add(3, 4);
-            expect(calculator.getHistory()).toHaveLength(2);
-
-            calculator.clearHistory();
-            expect(calculator.getHistory()).toEqual([]);
+            expect(countStableSessions(testData)).toBe(1);
         });
 
-        test('should return copy of history (immutable)', () => {
-            calculator.add(1, 2);
-            const history1 = calculator.getHistory();
-            const history2 = calculator.getHistory();
+        test('should not count falling', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1012,
+                },
+            ];
 
-            expect(history1).toEqual(history2);
-            expect(history1).not.toBe(history2); // Different objects
+            expect(countStableSessions(testData)).toBe(0);
+        });
+
+        test('should sort by dates', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-04',
+                    mid: 4.9999,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1219,
+                },
+            ];
+
+            expect(countStableSessions(testData)).toBe(1);
+        });
+
+        test('should count multiple sessions', () => {
+            const testData = [
+                {
+                    no: '001/A/NBP/2025',
+                    effectiveDate: '2025-01-02',
+                    mid: 4.1219,
+                },
+                {
+                    no: '002/A/NBP/2025',
+                    effectiveDate: '2025-01-03',
+                    mid: 4.1219,
+                },
+                {
+                    no: '003/A/NBP/2025',
+                    effectiveDate: '2025-01-04',
+                    mid: 4.1512,
+                },
+                {
+                    no: '004/A/NBP/2025',
+                    effectiveDate: '2025-01-05',
+                    mid: 4.1512,
+                },
+            ];
+
+            expect(countStableSessions(testData)).toBe(2);
         });
     });
 });
