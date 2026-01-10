@@ -4,14 +4,19 @@
 
 const VITE_NBP_API_BASE_URL = 'https://api.nbp.pl/api';
 
-type Currency = {
+export type Currency = {
     tableType: 'A' | 'B';
     currency: string;
     code: string;
 };
 
-export type CurrencyTable = {
-    rates: Currency[];
+export type ApiCurrency = {
+    currency: string;
+    code: string;
+};
+
+export type ApiCurrencyTable = {
+    rates: ApiCurrency[];
 };
 
 export type BackendApiOptions = {
@@ -29,6 +34,15 @@ export type SingleCurrencyRate = {
 };
 
 export type Period = 'WEEK' | 'TWO_WEEKS' | 'MONTH' | 'QUARTER' | 'HALF_YEAR' | 'YEAR';
+
+export const LABEL_BY_PERIOD: Record<Period, string> = {
+    WEEK: 'last week',
+    TWO_WEEKS: 'last 2 weeks',
+    MONTH: 'last month',
+    QUARTER: 'last quarter',
+    HALF_YEAR: 'last half of year',
+    YEAR: 'last year',
+};
 
 const DAYS_BY_PERIOD: Record<Period, number> = {
     WEEK: 7,
@@ -78,8 +92,8 @@ export async function backendGetJson<T>(path: string, options: BackendApiOptions
 }
 
 export async function fetchCodes(): Promise<string[]> {
-    const tableA: CurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
-    const tableB: CurrencyTable[] = await backendGetJson('/exchangerates/tables/B/');
+    const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
+    const tableB: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/B/');
 
     const tableAWithType = tableA.map(table => ({ ...table, tableType: 'A' }));
     const tableBWithType = tableB.map(table => ({ ...table, tableType: 'B' }));
@@ -90,16 +104,39 @@ export async function fetchCodes(): Promise<string[]> {
     return currencyCodes;
 }
 
+export async function fetchCurrencies(): Promise<Currency[]> {
+    const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
+    const tableB: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/B/');
+
+    return [
+        ...tableA.flatMap(table =>
+            table.rates.map(rate => ({
+                currency: rate.currency,
+                code: rate.code,
+                tableType: 'A' as const,
+            }))
+        ),
+        ...tableB.flatMap(table =>
+            table.rates.map(rate => ({
+                currency: rate.currency,
+                code: rate.code,
+                tableType: 'B' as const,
+            }))
+        ),
+    ];
+}
+
 export async function fetchSingleCurrencyRateForPeriod(
     period: Period,
     currency: Currency
 ): Promise<SingleCurrencyRate[]> {
+    console.log(currency);
     const today: Date = new Date();
     const numDays = DAYS_BY_PERIOD[period];
     const past = new Date();
     past.setDate(past.getDate() - numDays);
     const ratesTable: SingleCurrencyTable = await backendGetJson(
-        `/exchangerates/rates/${currency.tableType}/${currency.code}/${past.toLocaleDateString('yyyy-MM-dd')}/${today.toLocaleDateString('yyyy-MM-dd')}`
+        `/exchangerates/rates/${currency.tableType}/${currency.code}/${past.toISOString().split('T')[0]}/${today.toISOString().split('T')[0]}`
     );
 
     return ratesTable.rates;

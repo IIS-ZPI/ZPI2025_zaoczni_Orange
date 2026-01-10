@@ -1,15 +1,95 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import {
+    calculateMedian,
+    calculateMode,
+    calculateStandardDeviation,
+    calculateVariance,
+} from './utils/statisticalMeasures';
+import {
+    fetchCodes,
+    fetchCurrencies,
+    fetchSingleCurrencyRateForPeriod,
+    LABEL_BY_PERIOD,
+    type Currency,
+    type Period,
+    type SingleCurrencyRate,
+} from './api/nbpApi';
+import {
+    countFallingSessions,
+    countRisingSessions,
+    countStableSessions,
+} from './utils/sessionAnalysisUtil';
+
+const PERIODS = Object.keys(LABEL_BY_PERIOD) as Period[];
+const DEFAULT_CURRENCY_CODE = 'USD';
+const DEFAULT_PERIOD: Period = 'MONTH';
 
 function App() {
+    const [currencyRates, setCurrencyRates] = useState<SingleCurrencyRate[]>([]);
+    const [codes, setCodes] = useState<string[]>([]);
+    const [currencies, setCurrencies] = useState<Currency[]>([]);
+    const [selectedCurrency, setSelectedCurrency] = useState<Currency | undefined>(undefined);
+    const [selectedCode, setSelectedCode] = useState('');
+    const [selectedPeriod, setSelectedPeriod] = useState<Period>(DEFAULT_PERIOD);
+
+    useEffect(() => {
+        fetchCodes().then(setCodes);
+        fetchCurrencies().then(data => {
+            setCurrencies(data);
+            setSelectedCode(DEFAULT_CURRENCY_CODE);
+        });
+    }, []);
+
+    useEffect(() => {
+        const fetchNbpApi = async () => {
+            const nextSelectedCurrencies = currencies.filter(
+                currency => currency.code === selectedCode
+            );
+            if (nextSelectedCurrencies.length === 0) {
+                setSelectedCurrency(undefined);
+                return;
+            }
+            const nextSelectedCurrency = nextSelectedCurrencies[0];
+            setSelectedCurrency(nextSelectedCurrency);
+
+            const nextCurrencyRates = await fetchSingleCurrencyRateForPeriod(
+                selectedPeriod,
+                nextSelectedCurrency
+            );
+            setCurrencyRates(nextCurrencyRates);
+        };
+
+        fetchNbpApi();
+    }, [selectedCode, selectedPeriod]);
+
+    const formatNumber = (value: number) => {
+        if (Number.isNaN(value)) {
+            return '---';
+        }
+        return `${value.toFixed(4)}`;
+    };
+
     const dailyStats = useMemo(
         () => [
-            { label: 'Średnia 7d', value: '4.2150 PLN' },
-            { label: 'Średnia 30d', value: '4.3120 PLN' },
-            { label: 'Max 30d', value: '4.4012 PLN' },
-            { label: 'Min 30d', value: '4.1987 PLN' },
+            { label: 'Median', value: `${formatNumber(calculateMedian(currencyRates))} PLN` },
+            { label: 'Mode', value: `${formatNumber(calculateMode(currencyRates))} PLN` },
+            {
+                label: 'Standard deviation',
+                value: `${formatNumber(calculateStandardDeviation(currencyRates))} PLN`,
+            },
+            { label: 'Variance', value: `${formatNumber(calculateVariance(currencyRates))} PLN` },
         ],
-        []
+        [currencyRates]
+    );
+
+    const risingFallingStats = useMemo(
+        () => [
+            { label: 'Rising', value: `${countRisingSessions(currencyRates)}` },
+            { label: 'Stable', value: `${countStableSessions(currencyRates)}` },
+            { label: 'Falling', value: `${countFallingSessions(currencyRates)}` },
+        ],
+        [currencyRates]
     );
 
     const tableRows = useMemo(
@@ -27,30 +107,90 @@ function App() {
             <header className="hero">
                 <div>
                     <p className="eyebrow">NBP Currency Preview</p>
-                    <h1>Analizator Walut — etap 2</h1>
-                    <p className="subtext">
-                        Podstawowy podgląd wyglądu z danymi przykładowymi. Kilka elementów wciąż do
-                        dopracowania (TODO).
-                    </p>
+                    <h1>Currency analizer</h1>
                     <div className="chips">
-                        <span className="chip">Waluta: USD</span>
-                        <span className="chip">Okres: 1M</span>
-                        <span className="chip chip-outline">Źródło: dummy</span>
+                        <span className="chip">
+                            Currency: {selectedCurrency ? selectedCurrency.code : '---'}
+                        </span>
+                        <span className="chip">Period: {LABEL_BY_PERIOD[selectedPeriod]}</span>
+                        <a href="https://api.nbp.pl/" style={{ textDecoration: 'none' }}>
+                            <span className="chip chip-outline">Source: NBP</span>
+                        </a>
                     </div>
                 </div>
             </header>
 
             <section className="panel">
                 <div className="panel-header">
-                    <h2>Podstawowe wskaźniki</h2>
-                    <span className="muted">Bez obsługi błędów — dane makietowe</span>
+                    <h2>Session analysis parameters</h2>
+                </div>
+                <div id="align">
+                    <div className="left-select">
+                        <label>
+                            <strong>Currency:</strong>
+                        </label>
+                        <br></br>
+                        <select
+                            value={selectedCode}
+                            onChange={e => setSelectedCode(e.target.value)}
+                            className="select"
+                        >
+                            <option value="">-- Choose currency --</option>
+                            {codes.map(code => (
+                                <option key={code} value={code}>
+                                    {code}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="left-select">
+                        <label>
+                            <strong>Period:</strong>
+                        </label>
+                        <br></br>
+                        <select
+                            value={selectedPeriod}
+                            onChange={e => setSelectedPeriod(e.target.value as Period)}
+                            className="select"
+                        >
+                            {PERIODS.map(p => (
+                                <option key={p} value={p}>
+                                    {LABEL_BY_PERIOD[p]}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div id="clear" />
+                </div>
+            </section>
+
+            <section className="panel">
+                <div className="panel-header">
+                    <h2>Session analysis - {selectedCurrency ? selectedCurrency.code : '---'}</h2>
+                </div>
+                <div className="cards">
+                    {risingFallingStats.map(item => (
+                        <div key={item.label} className="card">
+                            <p className="card-label">{item.label}</p>
+                            <p className="card-value">{item.value}</p>
+                            {/* <p className="card-note">TODO: podpiąć API</p> */}
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="panel">
+                <div className="panel-header">
+                    <h2>
+                        Statistical measures - {selectedCurrency ? selectedCurrency.code : '---'}
+                    </h2>
                 </div>
                 <div className="cards">
                     {dailyStats.map(item => (
                         <div key={item.label} className="card">
                             <p className="card-label">{item.label}</p>
                             <p className="card-value">{item.value}</p>
-                            <p className="card-note">TODO: podpiąć API</p>
+                            {/* <p className="card-note">TODO: podpiąć API</p> */}
                         </div>
                     ))}
                 </div>

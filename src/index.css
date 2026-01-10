@@ -50,7 +50,8 @@ body {
 .chips {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
+    align-items: center;
 }
 
 .chip {
@@ -157,4 +158,34 @@ tr:hover td {
 .todo {
     color: #f97316;
     font-weight: 700;
+}
+
+.select {
+    min-width: 320px;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #111827;
+    outline: none;
+}
+
+.left-select {
+    flex: 1; /* każda kolumna = 50% */
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+#clear {
+    clear: both;
+}
+
+#align {
+    /* align-items: flex-end; */
+    display: flex;
+    gap: 12px;
+    justify-content: flex-start;
 }
