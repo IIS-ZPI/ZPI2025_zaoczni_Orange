@@ -1,3 +1,5 @@
+import { config } from '../utils/config';
+
 export type BackendApiOptions = {
     timeoutMs?: number;
 };
@@ -5,7 +7,7 @@ export type BackendApiOptions = {
 const DEFAULT_TIMEOUT_MS = 4000;
 
 function buildUrl(path: string): string {
-    const base = (import.meta.env.VITE_BACKEND_URL as string | undefined)?.trim();
+    const base = config.backendUrl?.trim();
     if (!base) {
         throw new Error('BACKEND_URL_NOT_CONFIGURED');
     }

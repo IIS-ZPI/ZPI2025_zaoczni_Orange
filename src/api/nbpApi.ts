@@ -2,7 +2,7 @@
 // https://api.nbp.pl/api/exchangerates/tables/{table}/
 //
 
-const VITE_NBP_API_BASE_URL = 'https://api.nbp.pl/api';
+import { config } from '../utils/config';
 
 export type Currency = {
     tableType: 'A' | 'B';
@@ -56,7 +56,7 @@ const DAYS_BY_PERIOD: Record<Period, number> = {
 const DEFAULT_TIMEOUT_MS = 4000;
 
 function buildUrl(path: string): string {
-    const base = VITE_NBP_API_BASE_URL?.trim();
+    const base = config.nbpApiUrl?.trim();
     if (!base) {
         throw new Error('BACKEND_URL_NOT_CONFIGURED');
     }
