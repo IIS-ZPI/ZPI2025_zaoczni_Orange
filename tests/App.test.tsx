@@ -8,7 +8,7 @@ describe('App Component', () => {
         });
 
         await waitFor(() => {
-            const heading = screen.getByText('Analizator Walut NBP');
+            const heading = screen.getByText('NBP Currency Analyzer');
             expect(heading).toBeInTheDocument();
         });
     });
