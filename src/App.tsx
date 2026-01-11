@@ -1,7 +1,15 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { Banknote, TrendingUp, BarChart3 } from 'lucide-react';
 import './App.css';
+import { CurrencySelector } from './components/CurrencySelector';
+import { SessionAnalysis } from './components/SessionAnalysis';
+import { StatisticalMeasures } from './components/StatisticalMeasures';
+import { DistributionAnalysis } from './components/DistributionAnalysis';
 
 function App() {
+    const [selectedCurrency, setSelectedCurrency] = useState('USD');
+    const [selectedPeriod, setSelectedPeriod] = useState('1m');
+
     const dailyStats = useMemo(
         () => [
             { label: 'Średnia 7d', value: '4.2150 PLN' },
@@ -21,69 +29,79 @@ function App() {
         ],
         []
     );
-
+    console.log(dailyStats, tableRows);
     return (
-        <div className="page">
-            <header className="hero">
-                <div>
-                    <p className="eyebrow">NBP Currency Preview</p>
-                    <h1>Analizator Walut — etap 2</h1>
-                    <p className="subtext">
-                        Podstawowy podgląd wyglądu z danymi przykładowymi. Kilka elementów wciąż do
-                        dopracowania (TODO).
-                    </p>
-                    <div className="chips">
-                        <span className="chip">Waluta: USD</span>
-                        <span className="chip">Okres: 1M</span>
-                        <span className="chip chip-outline">Źródło: dummy</span>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+            {/* Header */}
+            <header className="bg-white shadow-sm border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between py-6">
+                        <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-blue-600 rounded-lg">
+                                <Banknote className="h-8 w-8 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">
+                                    Analizator Walut NBP
+                                </h1>
+                                <p className="text-sm text-gray-600">
+                                    System analizy statystycznej kursów walutowych
+                                </p>
+                            </div>
+                        </div>
+                        <div className="hidden md:flex items-center space-x-6">
+                            <div className="flex items-center text-sm text-gray-600">
+                                <TrendingUp className="h-4 w-4 mr-1" />
+                                Dane z API NBP
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                                <BarChart3 className="h-4 w-4 mr-1" />
+                                Analizy w czasie rzeczywistym
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <section className="panel">
-                <div className="panel-header">
-                    <h2>Podstawowe wskaźniki</h2>
-                    <span className="muted">Bez obsługi błędów — dane makietowe</span>
-                </div>
-                <div className="cards">
-                    {dailyStats.map(item => (
-                        <div key={item.label} className="card">
-                            <p className="card-label">{item.label}</p>
-                            <p className="card-value">{item.value}</p>
-                            <p className="card-note">TODO: podpiąć API</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            {/* Main Content */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Currency and Period Selection */}
+                <CurrencySelector
+                    selectedCurrency={selectedCurrency}
+                    onCurrencyChange={setSelectedCurrency}
+                    selectedPeriod={selectedPeriod}
+                    onPeriodChange={setSelectedPeriod}
+                />
 
-            <section className="panel">
-                <div className="panel-header">
-                    <h2>Ostatnie notowania</h2>
-                    <span className="muted">Przykładowa tabela — część kolumn do uzupełnienia</span>
+                {/* Session Analysis */}
+                <SessionAnalysis currency={selectedCurrency} period={selectedPeriod} />
+
+                {/* Statistical Measures */}
+                <StatisticalMeasures currency={selectedCurrency} period={selectedPeriod} />
+
+                {/* Distribution Analysis */}
+                <DistributionAnalysis baseCurrency={selectedCurrency} />
+            </main>
+
+            {/* Footer */}
+            <footer className="bg-gray-50 border-t border-gray-200 mt-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="text-center text-sm text-gray-500">
+                        <p>
+                            © 2025 Analizator Walut NBP. Dane pochodzą z oficjalnego API Narodowego
+                            Banku Polskiego.
+                        </p>
+                        <p className="mt-1">
+                            <a
+                                href="http://api.nbp.pl/"
+                                className="text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                                api.nbp.pl
+                            </a>
+                        </p>
+                    </div>
                 </div>
-                <div className="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Bid</th>
-                                <th>Ask</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableRows.map(row => (
-                                <tr key={row.date}>
-                                    <td>{row.date}</td>
-                                    <td>{row.bid}</td>
-                                    <td>{row.ask}</td>
-                                    <td className="todo">TODO</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            </footer>
         </div>
     );
 }
