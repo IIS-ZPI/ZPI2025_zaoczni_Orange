@@ -31,3 +31,6 @@ dist-ssr
 /playwright/.cache/
 
 /coverage/
+
+# TypeScript build info cache files
+*.tsbuildinfo
