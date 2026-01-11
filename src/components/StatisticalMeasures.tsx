@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart3, Calculator, TrendingUp, Activity } from 'lucide-react';
-import { backendGetJson } from '../services/backendApi';
+import { backendGetJson, isBackendConnectivityError } from '../services/backendApi';
 
 interface StatisticalMeasuresProps {
     currency: string;
@@ -42,17 +42,25 @@ export const StatisticalMeasures: React.FC<StatisticalMeasuresProps> = ({ curren
     };
 
     const [stats, setStats] = useState<StatisticalData>(() => getMockStatisticalData(period));
+    const [isMockData, setIsMockData] = useState<boolean>(false);
 
     useEffect(() => {
         let isCancelled = false;
 
         const run = async () => {
-            const query = new URLSearchParams({ currency, period });
-            const data = await backendGetJson<StatisticalData>(
-                `/api/statistical-measures?${query.toString()}`
-            );
-            if (isCancelled) return;
-            setStats(data);
+            try {
+                const query = new URLSearchParams({ currency, period });
+                const data = await backendGetJson<StatisticalData>(
+                    `/api/statistical-measures?${query.toString()}`
+                );
+                if (isCancelled) return;
+                setStats(data);
+                setIsMockData(false);
+            } catch (error) {
+                if (isCancelled) return;
+                setStats(getMockStatisticalData(period));
+                setIsMockData(isBackendConnectivityError(error));
+            }
         };
 
         run();
@@ -105,6 +113,11 @@ export const StatisticalMeasures: React.FC<StatisticalMeasuresProps> = ({ curren
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
                 Miary statystyczne - {currency}
             </h3>
+            {isMockData && (
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Dane makietowe (brak połączenia z backendem).
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {measures.map(measure => {

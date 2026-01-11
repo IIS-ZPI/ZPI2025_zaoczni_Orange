@@ -39,3 +39,16 @@ export async function backendGetJson<T>(path: string, options: BackendApiOptions
         window.clearTimeout(timeoutId);
     }
 }
+
+export function isBackendConnectivityError(error: unknown): boolean {
+    if (!error) return true;
+    if (typeof error === 'string') return true;
+    if (error instanceof DOMException && error.name === 'AbortError') return true;
+
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+        message === 'BACKEND_URL_NOT_CONFIGURED' ||
+        message.startsWith('HTTP_') ||
+        message.toLowerCase().includes('failed to fetch')
+    );
+}

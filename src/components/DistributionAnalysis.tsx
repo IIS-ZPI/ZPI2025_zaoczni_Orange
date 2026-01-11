@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart2, Table2 } from 'lucide-react';
-import { backendGetJson } from '../services/backendApi';
+import { backendGetJson, isBackendConnectivityError } from '../services/backendApi';
 
 interface DistributionAnalysisProps {
     baseCurrency: string;
@@ -40,21 +40,29 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = ({ base
     const [distributionData, setDistributionData] = useState<DistributionItem[]>(() =>
         getMockDistributionData()
     );
+    const [isMockData, setIsMockData] = useState<boolean>(false);
 
     useEffect(() => {
         let isCancelled = false;
 
         const run = async () => {
-            const query = new URLSearchParams({
-                baseCurrency,
-                pair: selectedPair,
-                type: analysisType,
-            });
-            const data = await backendGetJson<DistributionItem[]>(
-                `/api/distribution?${query.toString()}`
-            );
-            if (isCancelled) return;
-            setDistributionData(data);
+            try {
+                const query = new URLSearchParams({
+                    baseCurrency,
+                    pair: selectedPair,
+                    type: analysisType,
+                });
+                const data = await backendGetJson<DistributionItem[]>(
+                    `/api/distribution?${query.toString()}`
+                );
+                if (isCancelled) return;
+                setDistributionData(data);
+                setIsMockData(false);
+            } catch (error) {
+                if (isCancelled) return;
+                setDistributionData(getMockDistributionData());
+                setIsMockData(isBackendConnectivityError(error));
+            }
         };
 
         run();
@@ -70,6 +78,11 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = ({ base
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
                 Rozkład zmian {analysisType === 'monthly' ? 'miesięcznych' : 'kwartalnych'}
             </h3>
+            {isMockData && (
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Dane makietowe (brak połączenia z backendem).
+                </div>
+            )}
 
             {/* Controls */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

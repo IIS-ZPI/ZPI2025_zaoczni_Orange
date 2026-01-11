@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { backendGetJson } from '../services/backendApi';
+import { backendGetJson, isBackendConnectivityError } from '../services/backendApi';
 
 interface SessionAnalysisProps {
     currency: string;
@@ -29,17 +29,25 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
     };
 
     const [sessionData, setSessionData] = useState<SessionData>(() => getMockSessionData(period));
+    const [isMockData, setIsMockData] = useState<boolean>(false);
 
     useEffect(() => {
         let isCancelled = false;
 
         const run = async () => {
-            const query = new URLSearchParams({ currency, period });
-            const data = await backendGetJson<SessionData>(
-                `/api/session-analysis?${query.toString()}`
-            );
-            if (isCancelled) return;
-            setSessionData(data);
+            try {
+                const query = new URLSearchParams({ currency, period });
+                const data = await backendGetJson<SessionData>(
+                    `/api/session-analysis?${query.toString()}`
+                );
+                if (isCancelled) return;
+                setSessionData(data);
+                setIsMockData(false);
+            } catch (error) {
+                if (isCancelled) return;
+                setSessionData(getMockSessionData(period));
+                setIsMockData(isBackendConnectivityError(error));
+            }
         };
 
         run();
@@ -92,6 +100,11 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Analiza sesji - {currency}</h3>
+            {isMockData && (
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Dane makietowe (brak połączenia z backendem).
+                </div>
+            )}
             <p className="text-sm text-gray-600 mb-6">
                 Okres: {periodLabel}• Łączna liczba sesji: {sessionData.total}
             </p>
