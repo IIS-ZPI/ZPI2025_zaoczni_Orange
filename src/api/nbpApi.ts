@@ -4,12 +4,6 @@
 
 import { config } from '../utils/config';
 
-export type Currency = {
-    tableType: 'A' | 'B';
-    currency: string;
-    code: string;
-};
-
 export type ApiCurrency = {
     currency: string;
     code: string;
@@ -93,42 +87,23 @@ export async function backendGetJson<T>(path: string, options: BackendApiOptions
 
 export async function fetchCodes(): Promise<string[]> {
     const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
-    const tableB: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/B/');
 
     const tableAWithType = tableA.map(table => ({ ...table, tableType: 'A' }));
-    const tableBWithType = tableB.map(table => ({ ...table, tableType: 'B' }));
-    const allTables = [...tableAWithType, ...tableBWithType];
     const currencyCodes = [
-        ...new Set(allTables.flatMap(table => table.rates.map(rate => rate.code))),
+        ...new Set(tableAWithType.flatMap(table => table.rates.map(rate => rate.code))),
     ];
     return currencyCodes;
 }
 
-export async function fetchCurrencies(): Promise<Currency[]> {
+export async function fetchCurrencies(): Promise<string[]> {
     const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
-    const tableB: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/B/');
 
-    return [
-        ...tableA.flatMap(table =>
-            table.rates.map(rate => ({
-                currency: rate.currency,
-                code: rate.code,
-                tableType: 'A' as const,
-            }))
-        ),
-        ...tableB.flatMap(table =>
-            table.rates.map(rate => ({
-                currency: rate.currency,
-                code: rate.code,
-                tableType: 'B' as const,
-            }))
-        ),
-    ];
+    return tableA.flatMap(table => table.rates.map(rate => rate.currency));
 }
 
 export async function fetchSingleCurrencyRateForPeriod(
     period: Period,
-    currency: Currency
+    currency: string
 ): Promise<SingleCurrencyRate[]> {
     console.log(currency);
     const today: Date = new Date();
@@ -136,7 +111,7 @@ export async function fetchSingleCurrencyRateForPeriod(
     const past = new Date();
     past.setDate(past.getDate() - numDays);
     const ratesTable: SingleCurrencyTable = await backendGetJson(
-        `/exchangerates/rates/${currency.tableType}/${currency.code}/${past.toISOString().split('T')[0]}/${today.toISOString().split('T')[0]}`
+        `/exchangerates/rates/A/${currency}/${past.toISOString().split('T')[0]}/${today.toISOString().split('T')[0]}`
     );
 
     return ratesTable.rates;

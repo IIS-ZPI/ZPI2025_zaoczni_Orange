@@ -1,35 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Banknote, TrendingUp, BarChart3 } from 'lucide-react';
 import './App.css';
 import { CurrencySelector } from './components/CurrencySelector';
 import { SessionAnalysis } from './components/SessionAnalysis';
 import { StatisticalMeasures } from './components/StatisticalMeasures';
-import { DistributionAnalysis } from './components/DistributionAnalysis';
+import { Period } from './api/nbpApi';
+
+const DEFAULT_CURRENCY_CODE = 'USD';
 
 function App() {
-    const [selectedCurrency, setSelectedCurrency] = useState('USD');
-    const [selectedPeriod, setSelectedPeriod] = useState('1m');
+    const [selectedCurrency, setSelectedCurrency] = useState<string>(DEFAULT_CURRENCY_CODE);
+    const [selectedPeriod, setSelectedPeriod] = useState<Period>('MONTH');
 
-    const dailyStats = useMemo(
-        () => [
-            { label: 'Średnia 7d', value: '4.2150 PLN' },
-            { label: 'Średnia 30d', value: '4.3120 PLN' },
-            { label: 'Max 30d', value: '4.4012 PLN' },
-            { label: 'Min 30d', value: '4.1987 PLN' },
-        ],
-        []
-    );
-
-    const tableRows = useMemo(
-        () => [
-            { date: '2025-01-02', bid: '4.2100', ask: '4.2600' },
-            { date: '2025-01-03', bid: '4.2188', ask: '4.2682' },
-            { date: '2025-01-06', bid: '4.2311', ask: '4.2805' },
-            { date: '2025-01-07', bid: '4.2270', ask: '4.2760' },
-        ],
-        []
-    );
-    console.log(dailyStats, tableRows);
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
             {/* Header */}
@@ -42,21 +24,21 @@ function App() {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">
-                                    Analizator Walut NBP
+                                    NBP Currency Analyzer
                                 </h1>
                                 <p className="text-sm text-gray-600">
-                                    System analizy statystycznej kursów walutowych
+                                    System for statistical analysis of disease states
                                 </p>
                             </div>
                         </div>
                         <div className="hidden md:flex items-center space-x-6">
                             <div className="flex items-center text-sm text-gray-600">
                                 <TrendingUp className="h-4 w-4 mr-1" />
-                                Dane z API NBP
+                                Data from NBP API
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                                 <BarChart3 className="h-4 w-4 mr-1" />
-                                Analizy w czasie rzeczywistym
+                                Real-time analysis
                             </div>
                         </div>
                     </div>
@@ -77,10 +59,10 @@ function App() {
                 <SessionAnalysis currency={selectedCurrency} period={selectedPeriod} />
 
                 {/* Statistical Measures */}
-                <StatisticalMeasures currency={selectedCurrency} period={selectedPeriod} />
+                <StatisticalMeasures currencyCode={selectedCurrency} period={selectedPeriod} />
 
                 {/* Distribution Analysis */}
-                <DistributionAnalysis baseCurrency={selectedCurrency} />
+                {/* <DistributionAnalysis baseCurrency={selectedCurrency} /> */}
             </main>
 
             {/* Footer */}
@@ -88,8 +70,8 @@ function App() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="text-center text-sm text-gray-500">
                         <p>
-                            © 2025 Analizator Walut NBP. Dane pochodzą z oficjalnego API Narodowego
-                            Banku Polskiego.
+                            © 2025 NBP Currency Analyzer. Data comes from the official API of the
+                            National Bank of Poland.
                         </p>
                         <p className="mt-1">
                             <a

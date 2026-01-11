@@ -1,5 +1,9 @@
 import type { SingleCurrencyRate } from '../api/nbpApi';
 
+export function countTotalSessions(rates: SingleCurrencyRate[]): number {
+    return rates.length;
+}
+
 export function countRisingSessions(rates: SingleCurrencyRate[]): number {
     rates.sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate));
 
