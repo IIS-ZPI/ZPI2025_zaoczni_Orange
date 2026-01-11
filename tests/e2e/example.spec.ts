@@ -4,65 +4,51 @@ test('has title', async ({ page }) => {
     await page.goto('/');
 
     // Expect a title "to contain" a substring.
-    await expect(page).toHaveTitle('zpi2025-zaoczni-orange');
+    await expect(page).toHaveTitle('NBP Currency Stats Dashboard');
 });
 
-test('vite logo link works', async ({ page }) => {
+test('renders the main heading', async ({ page }) => {
     await page.goto('/');
 
-    // Check if Vite logo link exists and has correct href
-    const viteLink = page.getByRole('link').filter({ has: page.getByAltText('Vite logo') });
-    await expect(viteLink).toHaveAttribute('href', 'https://vite.dev');
-    await expect(viteLink).toHaveAttribute('target', '_blank');
+    // Check if the H1 heading is correct
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('NBP Currency Analyzer');
 });
 
-test('react logo link works', async ({ page }) => {
+test('renders the subtitle description', async ({ page }) => {
     await page.goto('/');
 
-    // Check if React logo link exists and has correct href
-    const reactLink = page.getByRole('link').filter({ has: page.getByAltText('React logo') });
-    await expect(reactLink).toHaveAttribute('href', 'https://react.dev');
-    await expect(reactLink).toHaveAttribute('target', '_blank');
+    // Check if the subtitle exists
+    await expect(page.getByText('System for statistical analysis of disease states')).toBeVisible();
 });
 
-test('app renders correctly', async ({ page }) => {
+test('renders header badges', async ({ page }) => {
     await page.goto('/');
 
-    // Check if the main heading is present
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Vite + React');
-
-    // Check if the counter button is present
-    await expect(page.getByRole('button', { name: /count is/i })).toBeVisible();
-
-    // Check if the deploy test text is present
-    await expect(page.getByText('Deploy test v1')).toBeVisible();
-
-    // Check if the read the docs text is present
-    await expect(page.getByText('Click on the Vite and React logos to learn more')).toBeVisible();
-
-    // Check if logos are present
-    await expect(page.getByAltText('Vite logo')).toBeVisible();
-    await expect(page.getByAltText('React logo')).toBeVisible();
+    // Check for the informative text in the header (visible on desktop)
+    await expect(page.getByText('Data from NBP API')).toBeVisible();
+    await expect(page.getByText('Real-time analysis')).toBeVisible();
 });
 
-test('counter functionality works', async ({ page }) => {
+test('renders footer with NBP API link', async ({ page }) => {
     await page.goto('/');
 
-    // Find the counter button and click it
-    const counterButton = page.getByRole('button', { name: /count is/i });
+    // Check for copyright text
+    await expect(page.getByText('© 2025 NBP Currency Analyzer')).toBeVisible();
 
-    // Check initial state
-    await expect(counterButton).toContainText('count is 0');
+    // Check if the NBP API link exists and has the correct href
+    const apiLink = page.getByRole('link', { name: 'api.nbp.pl' });
 
-    // Click the button
-    await counterButton.click();
+    await expect(apiLink).toBeVisible();
+    await expect(apiLink).toHaveAttribute('href', 'http://api.nbp.pl/');
+});
 
-    // Check if counter incremented
-    await expect(counterButton).toContainText('count is 1');
+test('app structure renders correctly', async ({ page }) => {
+    await page.goto('/');
 
-    // Click again
-    await counterButton.click();
+    // Ensure the <main> content area exists
+    const mainElement = page.locator('main');
+    await expect(mainElement).toBeVisible();
 
-    // Check if counter incremented again
-    await expect(counterButton).toContainText('count is 2');
+    // Check if the header icons are rendered (using the Lucide icon class logic or svg presence)
+    await expect(page.locator('header svg').first()).toBeVisible();
 });
