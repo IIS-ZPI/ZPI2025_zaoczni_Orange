@@ -14,3 +14,18 @@ Object.defineProperty(globalThis, 'import', {
     writable: false,
     configurable: true,
 });
+
+// Suppress React 18 act warnings in tests
+const originalError = console.error;
+beforeAll(() => {
+    console.error = (...args: unknown[]) => {
+        if (typeof args[0] === 'string' && args[0].includes('act(...)')) {
+            return;
+        }
+        originalError.call(console, ...args);
+    };
+});
+
+afterAll(() => {
+    console.error = originalError;
+});
