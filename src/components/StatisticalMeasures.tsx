@@ -7,6 +7,7 @@ import {
     calculateVariance,
 } from '../utils/statisticalMeasures';
 import { fetchSingleCurrencyRateForPeriod, Period, SingleCurrencyRate } from '../api/nbpApi';
+import { CSVLink } from 'react-csv';
 
 interface StatisticalMeasuresProps {
     currencyCode: string;
@@ -94,7 +95,7 @@ export const StatisticalMeasures: React.FC<StatisticalMeasuresProps> = ({
                 Statistical measures - {currencyCode}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 {measures.map(measure => {
                     const Icon = measure.icon;
                     return (
@@ -113,6 +114,24 @@ export const StatisticalMeasures: React.FC<StatisticalMeasuresProps> = ({
                         </div>
                     );
                 })}
+            </div>
+
+            <div>
+                {currencyRates && currencyRates.length > 0 && (
+                    <CSVLink
+                        data={[
+                            {
+                                median: calculateMedian(currencyRates),
+                                mode: calculateMode(currencyRates),
+                                standardDeviation: calculateStandardDeviation(currencyRates),
+                                variance: calculateVariance(currencyRates),
+                            },
+                        ]}
+                        filename={`${currencyCode}_${period}_stats.csv`}
+                    >
+                        Export to CSV
+                    </CSVLink>
+                )}
             </div>
         </div>
     );

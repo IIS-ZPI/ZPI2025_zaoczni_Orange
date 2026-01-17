@@ -12,6 +12,7 @@ import {
     Period,
     SingleCurrencyRate,
 } from '../api/nbpApi';
+import { CSVLink } from 'react-csv';
 
 interface SessionAnalysisProps {
     currency: string;
@@ -91,7 +92,7 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
                 {sessionData ? countTotalSessions(sessionData) : '---'}
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 {cards.map(card => {
                     const Icon = card.icon;
                     return (
@@ -114,6 +115,23 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
                         </div>
                     );
                 })}
+            </div>
+
+            <div>
+                {sessionData && sessionData.length > 0 && (
+                    <CSVLink
+                        data={[
+                            {
+                                rising: countRisingSessions(sessionData),
+                                falling: countFallingSessions(sessionData),
+                                stable: countStableSessions(sessionData),
+                            },
+                        ]}
+                        filename={`${currency}_${period}_trends.csv`}
+                    >
+                        Export to CSV
+                    </CSVLink>
+                )}
             </div>
         </div>
     );

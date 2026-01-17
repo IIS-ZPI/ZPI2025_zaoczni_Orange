@@ -7,6 +7,7 @@ import {
     SingleCurrencyRate,
 } from '../api/nbpApi';
 import { calculateChangeDistribution, ChangeDistributionItem } from '../utils/changeDistribution';
+import { CSVLink } from 'react-csv';
 
 interface DistributionAnalysisProps {
     baseCurrency: string;
@@ -21,18 +22,12 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
     const [currencies, setCurrencies] = useState<string[]>([]);
     const [selectedCurrency1, setSelectedCurrency1] = useState<string>('');
     const [selectedCurrency2, setSelectedCurrency2] = useState<string>('');
-    const [analysisType, setAnalysisType] = useState<Period>('MONTH');
+    const [analysisPeriod, setAnalysisType] = useState<Period>('MONTH');
     const [beginDate, setBeginDate] = useState<string>();
     const [viewType, setViewType] = useState<'chart' | 'table'>('chart');
     const [currencyRate1, setCurrencyRate1] = useState<SingleCurrencyRate[]>([]);
     const [currencyRate2, setCurrencyRate2] = useState<SingleCurrencyRate[]>([]);
     const [changeDistribution, setChangeDistribution] = useState<ChangeDistributionItem[]>([]);
-
-    // #TODO implement
-    const onExportCsv = () => {
-        console.log(changeDistribution);
-    };
-    onExportCsv();
 
     useEffect(() => {
         const loadCurrencies = async () => {
@@ -74,7 +69,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
 
             const data = await fetchSingleCurrencyRateForCustomPeriod(
                 new Date(beginDate),
-                analysisType,
+                analysisPeriod,
                 selectedCurrency1
             );
 
@@ -89,7 +84,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
         return () => {
             isCancelled = true;
         };
-    }, [selectedCurrency1, analysisType, beginDate]);
+    }, [selectedCurrency1, analysisPeriod, beginDate]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -103,7 +98,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
 
             const data = await fetchSingleCurrencyRateForCustomPeriod(
                 new Date(beginDate),
-                analysisType,
+                analysisPeriod,
                 selectedCurrency2
             );
 
@@ -118,7 +113,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
         return () => {
             isCancelled = true;
         };
-    }, [selectedCurrency2, analysisType, beginDate]);
+    }, [selectedCurrency2, analysisPeriod, beginDate]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -148,10 +143,13 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
             ? ` - ${selectedCurrency1}/${selectedCurrency2}`
             : '';
 
+    const allCriteriaSelected =
+        !!selectedCurrency1 && !!selectedCurrency2 && !!beginDate && !!analysisPeriod;
+
     return (
         <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                {analysisType === 'MONTH' ? 'Monthly' : 'Quarterly'} change distribution
+                {analysisPeriod === 'MONTH' ? 'Monthly' : 'Quarterly'} change distribution
             </h3>
 
             {/* Controls */}
@@ -204,7 +202,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                             Analysis type
                         </label>
                         <select
-                            value={analysisType}
+                            value={analysisPeriod}
                             onChange={e => setAnalysisType(e.target.value as Period)}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
@@ -249,64 +247,104 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                     <h4 className="text-lg font-medium text-gray-800 mb-4">
                         Frequency Histogram of Changes{pairLabel}
                     </h4>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="space-y-2">
-                            {distributionData.map((item, index) => (
-                                <div key={index} className="flex items-center">
-                                    <div className="w-32 text-xs text-gray-600 font-mono">
-                                        {item.range}
-                                    </div>
-                                    <div className="flex-1 ml-4">
-                                        <div className="flex items-center">
-                                            <div
-                                                className="bg-blue-500 h-6 rounded transition-all"
-                                                style={{
-                                                    width: `${(item.count / maxCount) * 100}%`,
-                                                    minWidth: item.count > 0 ? '20px' : '0px',
-                                                }}
-                                            />
-                                            <span className="ml-2 text-sm font-medium text-gray-700">
-                                                {item.count}
-                                            </span>
+
+                    {!allCriteriaSelected && (
+                        <p className="text-sm text-gray-600 mb-6">
+                            Specify filters to display the chart
+                        </p>
+                    )}
+
+                    {!!allCriteriaSelected && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="space-y-2">
+                                {distributionData.map((item, index) => (
+                                    <div key={index} className="flex items-center">
+                                        <div className="w-32 text-xs text-gray-600 font-mono">
+                                            {item.range}
+                                        </div>
+                                        <div className="flex-1 ml-4">
+                                            <div className="flex items-center">
+                                                <div
+                                                    className="bg-blue-500 h-6 rounded transition-all"
+                                                    style={{
+                                                        width: `${(item.count / maxCount) * 100}%`,
+                                                        minWidth: item.count > 0 ? '20px' : '0px',
+                                                    }}
+                                                />
+                                                <span className="ml-2 text-sm font-medium text-gray-700">
+                                                    {item.count}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
 
             {/* Table View */}
             {viewType === 'table' && (
                 <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-200 rounded-lg">
-                        <thead>
-                            <tr className="bg-blue-50">
-                                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800">
-                                    Interval
-                                </th>
-                                <th className="border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-gray-800">
-                                    Count of changes
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {distributionData.map((item, index) => (
-                                <tr
-                                    key={index}
-                                    className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                                >
-                                    <td className="border border-gray-200 px-4 py-3 text-sm font-mono text-gray-700">
-                                        {item.range}
-                                    </td>
-                                    <td className="border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-gray-900">
-                                        {item.count}
-                                    </td>
+                    {!allCriteriaSelected && (
+                        <p className="text-sm text-gray-600 mb-6">
+                            Specify filters to display the data
+                        </p>
+                    )}
+
+                    {!!allCriteriaSelected && (
+                        <table className="w-full border-collapse border border-gray-200 rounded-lg">
+                            <thead>
+                                <tr className="bg-blue-50">
+                                    <th className="border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800">
+                                        Interval
+                                    </th>
+                                    <th className="border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-gray-800">
+                                        Count of changes
+                                    </th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {distributionData.map((item, index) => (
+                                    <tr
+                                        key={index}
+                                        className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                                    >
+                                        <td className="border border-gray-200 px-4 py-3 text-sm font-mono text-gray-700">
+                                            {item.range}
+                                        </td>
+                                        <td className="border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-gray-900">
+                                            {item.count}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {/* Download CSV link */}
+            {!!allCriteriaSelected && (
+                <div>
+                    <CSVLink
+                        data={changeDistribution}
+                        filename={`${selectedCurrency1}_${selectedCurrency2}_${beginDate}_${analysisPeriod}.csv`}
+                        onClick={(event: any) => {
+                            if (
+                                !selectedCurrency1 ||
+                                !selectedCurrency2 ||
+                                !beginDate ||
+                                !analysisPeriod
+                            ) {
+                                event.preventDefault();
+                                console.log('Disabled');
+                            }
+                        }}
+                    >
+                        Export to CSV
+                    </CSVLink>
                 </div>
             )}
         </div>
