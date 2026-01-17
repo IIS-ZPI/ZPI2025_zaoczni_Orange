@@ -32,7 +32,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
     useEffect(() => {
         const loadCurrencies = async () => {
             const codes = await fetchCodes();
-            setCurrencies(codes);
+            setCurrencies([...codes, 'PLN'].sort());
         };
         loadCurrencies();
     }, []);
@@ -190,7 +190,13 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                         </label>
                         <input
                             value={beginDate}
-                            onChange={e => setBeginDate(e.target.value)}
+                            onChange={e =>
+                                setBeginDate(
+                                    /\d{4}-\d{2}-\d{2}/.test(e.target.value)
+                                        ? e.target.value
+                                        : undefined
+                                )
+                            }
                             type="text"
                             pattern="^\d{4}-\d{2}-\d{2}$"
                             placeholder="YYYY-MM-DD"

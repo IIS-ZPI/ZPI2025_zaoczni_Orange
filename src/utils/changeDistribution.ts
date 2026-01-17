@@ -12,22 +12,21 @@ export function calculateChangeDistribution(
     numRanges: number = 14,
     minRangeSize: number = 0.0001
 ): ChangeDistributionItem[] {
-    if (currency1.length !== currency2.length) {
-        throw new Error('Number of currency rates mismatched');
-    }
-
-    if ([...currency1, ...currency2].filter(c => c.mid <= 0).length > 0) {
+    if ([...currency1, ...currency2].some(c => c.mid <= 0)) {
         throw new Error('Invalid currency rate value');
     }
 
-    console.log(`Calc start`);
-    const finalCurrencyRate = currency1.map((cur1, idx) => {
-        const cur2 = currency2[idx];
+    const dates = currency1
+        .map(cur1 => cur1.effectiveDate)
+        .filter(date => currency2.some(cur2 => cur2.effectiveDate === date));
 
-        if (cur1.effectiveDate !== cur2.effectiveDate) {
-            throw new Error('Date mismatch');
-        }
+    if (dates.length === 0) {
+        return [];
+    }
 
+    const finalCurrencyRate = dates.map(date => {
+        const cur1 = currency1.find(cur1 => cur1.effectiveDate === date)!;
+        const cur2 = currency2.find(cur2 => cur2.effectiveDate === date)!;
         return cur1.mid / cur2.mid;
     });
 

@@ -91,7 +91,7 @@ export async function fetchCodes(): Promise<string[]> {
     const tableAWithType = tableA.map(table => ({ ...table, tableType: 'A' }));
     const currencyCodes = [
         ...new Set(tableAWithType.flatMap(table => table.rates.map(rate => rate.code))),
-    ];
+    ].sort();
     return currencyCodes;
 }
 
@@ -106,6 +106,21 @@ export async function fetchSingleCurrencyRateForDateRange(
     endDate: Date,
     currency: string
 ): Promise<SingleCurrencyRate[]> {
+    if (currency === 'PLN') {
+        // Fake PLN rates - this is reference currency.
+        const rates: SingleCurrencyRate[] = [];
+        const currentDate = new Date(beginDate);
+        while (currentDate <= endDate) {
+            rates.push({
+                no: '',
+                effectiveDate: currentDate.toISOString().split('T')[0],
+                mid: 1.0,
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        return rates;
+    }
+
     const ratesTable: SingleCurrencyTable = await backendGetJson(
         `/exchangerates/rates/A/${currency}/${beginDate.toISOString().split('T')[0]}/${endDate.toISOString().split('T')[0]}`
     );

@@ -38,15 +38,33 @@ describe('calculateChangeDistribution', () => {
             expect(res.reduce((s, r) => s + r.count, 0)).toBe(0);
         });
 
-        test('throws when arrays lengths differ', () => {
-            const c1 = buildRates([1, 2, 3]);
-            const c2 = buildRates([1, 2]);
-            expect(() => calculateChangeDistribution(c1, c2, 3)).toThrow();
+        test('uses only intersecting dates when arrays lengths differ', () => {
+            const c1 = [
+                { no: '1', effectiveDate: '2020-01-01', mid: 1 },
+                { no: '2', effectiveDate: '2020-01-02', mid: 2 },
+                { no: '3', effectiveDate: '2020-01-03', mid: 3 },
+            ];
+
+            const c2 = [
+                { no: '1', effectiveDate: '2020-01-02', mid: 2 },
+                { no: '2', effectiveDate: '2020-01-03', mid: 2 },
+            ];
+
+            const res = calculateChangeDistribution(c1, c2, 3);
+            expect(res.reduce((s, r) => s + r.count, 0)).toBe(2);
         });
 
-        test('throws on zero in denominator', () => {
-            const c1 = buildRates([1, 2]);
-            const c2 = buildRates([1, 0]);
+        test('throws on zero currency rate for intersecting dates', () => {
+            const c1 = [
+                { no: '1', effectiveDate: '2020-01-01', mid: 1 },
+                { no: '2', effectiveDate: '2020-01-02', mid: 2 },
+            ];
+
+            const c2 = [
+                { no: '1', effectiveDate: '2020-01-01', mid: 1 },
+                { no: '2', effectiveDate: '2020-01-02', mid: 0 },
+            ];
+
             expect(() => calculateChangeDistribution(c1, c2, 2)).toThrow();
         });
 
@@ -54,7 +72,7 @@ describe('calculateChangeDistribution', () => {
             const c1 = buildRates([2, 2, 2, 2]);
             const c2 = buildRates([1, 1, 1, 1]);
             const res = calculateChangeDistribution(c1, c2, 3);
-            // expect all counts to sum to 4 and one bin to contain all
+
             expect(res.reduce((s, r) => s + r.count, 0)).toBe(4);
             expect(res.filter(r => r.count === 4).length).toBe(1);
         });
@@ -66,6 +84,23 @@ describe('calculateChangeDistribution', () => {
             expect(res.reduce((s, r) => s + r.count, 0)).toBe(4);
             const maxBin = res[res.length - 1];
             expect(maxBin.count).toBeGreaterThan(0);
+        });
+
+        test('ignores non-intersecting dates', () => {
+            const c1 = [
+                { no: '1', effectiveDate: '2020-01-01', mid: 1 },
+                { no: '2', effectiveDate: '2020-01-02', mid: 2 },
+                { no: '3', effectiveDate: '2020-01-03', mid: 3 },
+            ];
+
+            const c2 = [
+                { no: '1', effectiveDate: '2020-02-01', mid: 2 },
+                { no: '2', effectiveDate: '2020-02-02', mid: 2 },
+            ];
+
+            const res = calculateChangeDistribution(c1, c2, 3);
+
+            expect(res.reduce((s, r) => s + r.count, 0)).toBe(0);
         });
     });
 });
