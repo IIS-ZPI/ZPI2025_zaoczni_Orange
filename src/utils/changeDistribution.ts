@@ -9,7 +9,7 @@ export type ChangeDistributionItem = {
 export function calculateChangeDistribution(
     currency1: SingleCurrencyRate[],
     currency2: SingleCurrencyRate[],
-    numRanges: number = 14,
+    desiredNumRanges: number = 14,
     minRangeSize: number = 0.0001
 ): ChangeDistributionItem[] {
     if ([...currency1, ...currency2].some(c => c.mid <= 0)) {
@@ -30,19 +30,27 @@ export function calculateChangeDistribution(
         return cur1.mid / cur2.mid;
     });
 
-    const globalMin = Math.min(...finalCurrencyRate);
-    const globalMax = Math.max(...finalCurrencyRate);
-    const rangeSize = Math.max(minRangeSize, (globalMax - globalMin) / numRanges);
+    const currencyRateChanges = finalCurrencyRate.slice(1).map((rate, index) => {
+        return rate - finalCurrencyRate[index];
+    });
 
-    const changeDistribution = Array.from({ length: numRanges }, (_, i) => {
+    const globalMin = Math.min(...currencyRateChanges);
+    const globalMax = Math.max(...currencyRateChanges);
+    const rangeSize = Math.max(minRangeSize, (globalMax - globalMin) / desiredNumRanges);
+    if (rangeSize === minRangeSize) {
+        desiredNumRanges = Math.ceil((globalMax - globalMin) / rangeSize);
+    }
+    if (globalMin === globalMax) {
+        desiredNumRanges = 1;
+    }
+
+    const changeDistribution = Array.from({ length: desiredNumRanges }, (_, i) => {
         const rangeMin = globalMin + i * rangeSize;
-        const rangeMax = i === numRanges - 1 ? globalMax : globalMin + (i + 1) * rangeSize;
+        const rangeMax = i === desiredNumRanges - 1 ? globalMax : globalMin + (i + 1) * rangeSize;
 
-        const count = finalCurrencyRate.filter(
+        const count = currencyRateChanges.filter(
             v => v >= rangeMin && (v < rangeMax || rangeMax === globalMax)
         ).length;
-
-        console.log(`(${rangeMin}, ${rangeMax}) ${count}`);
 
         return {
             min: rangeMin,
