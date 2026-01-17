@@ -101,6 +101,30 @@ export async function fetchCurrencies(): Promise<string[]> {
     return tableA.flatMap(table => table.rates.map(rate => rate.currency));
 }
 
+export async function fetchSingleCurrencyRateForDateRange(
+    beginDate: Date,
+    endDate: Date,
+    currency: string
+): Promise<SingleCurrencyRate[]> {
+    const ratesTable: SingleCurrencyTable = await backendGetJson(
+        `/exchangerates/rates/A/${currency}/${beginDate.toISOString().split('T')[0]}/${endDate.toISOString().split('T')[0]}`
+    );
+
+    return ratesTable.rates;
+}
+
+export async function fetchSingleCurrencyRateForCustomPeriod(
+    beginDate: Date,
+    period: Period,
+    currency: string
+): Promise<SingleCurrencyRate[]> {
+    const numDays = DAYS_BY_PERIOD[period];
+    const endDate = new Date(beginDate);
+    endDate.setDate(beginDate.getDate() + numDays);
+
+    return fetchSingleCurrencyRateForDateRange(beginDate, endDate, currency);
+}
+
 export async function fetchSingleCurrencyRateForPeriod(
     period: Period,
     currency: string
@@ -110,9 +134,6 @@ export async function fetchSingleCurrencyRateForPeriod(
     const numDays = DAYS_BY_PERIOD[period];
     const past = new Date();
     past.setDate(past.getDate() - numDays);
-    const ratesTable: SingleCurrencyTable = await backendGetJson(
-        `/exchangerates/rates/A/${currency}/${past.toISOString().split('T')[0]}/${today.toISOString().split('T')[0]}`
-    );
 
-    return ratesTable.rates;
+    return fetchSingleCurrencyRateForDateRange(past, today, currency);
 }

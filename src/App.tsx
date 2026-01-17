@@ -5,6 +5,7 @@ import { CurrencySelector } from './components/CurrencySelector';
 import { SessionAnalysis } from './components/SessionAnalysis';
 import { StatisticalMeasures } from './components/StatisticalMeasures';
 import { Period } from './api/nbpApi';
+import { DistributionAnalysis } from './components/DistributionAnalysis';
 
 const DEFAULT_CURRENCY_CODE = 'USD';
 
@@ -62,7 +63,7 @@ function App() {
                 <StatisticalMeasures currencyCode={selectedCurrency} period={selectedPeriod} />
 
                 {/* Distribution Analysis */}
-                {/* <DistributionAnalysis baseCurrency={selectedCurrency} /> */}
+                <DistributionAnalysis baseCurrency={selectedCurrency} />
             </main>
 
             {/* Footer */}

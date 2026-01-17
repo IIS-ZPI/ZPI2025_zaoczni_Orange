@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart2, Table2 } from 'lucide-react';
-import { backendGetJson, isBackendConnectivityError } from '../services/backendApi';
+import {
+    fetchCodes,
+    fetchSingleCurrencyRateForCustomPeriod,
+    Period,
+    SingleCurrencyRate,
+} from '../api/nbpApi';
+import { calculateChangeDistribution, ChangeDistributionItem } from '../utils/changeDistribution';
 
 interface DistributionAnalysisProps {
     baseCurrency: string;
@@ -11,114 +17,205 @@ type DistributionItem = {
     count: number;
 };
 
-export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = ({ baseCurrency }) => {
-    const [selectedPair, setSelectedPair] = useState('EUR/USD');
-    const [analysisType, setAnalysisType] = useState('monthly');
+export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
+    const [currencies, setCurrencies] = useState<string[]>([]);
+    const [selectedCurrency1, setSelectedCurrency1] = useState<string>('');
+    const [selectedCurrency2, setSelectedCurrency2] = useState<string>('');
+    const [analysisType, setAnalysisType] = useState<Period>('MONTH');
+    const [beginDate, setBeginDate] = useState<string>();
     const [viewType, setViewType] = useState<'chart' | 'table'>('chart');
+    const [currencyRate1, setCurrencyRate1] = useState<SingleCurrencyRate[]>([]);
+    const [currencyRate2, setCurrencyRate2] = useState<SingleCurrencyRate[]>([]);
+    const [changeDistribution, setChangeDistribution] = useState<ChangeDistributionItem[]>([]);
 
-    const currencyPairs = ['EUR/USD', 'USD/PLN', 'EUR/PLN', 'GBP/USD', 'USD/JPY', 'CHF/PLN'];
+    // #TODO implement
+    const onExportCsv = () => {
+        console.log(changeDistribution);
+    };
+    onExportCsv();
 
-    const getMockDistributionData = (): DistributionItem[] => {
-        return [
-            { range: '-0.0136 do -0.0116', count: 0 },
-            { range: '-0.0116 do -0.0097', count: 0 },
-            { range: '-0.0097 do -0.0077', count: 1 },
-            { range: '-0.0077 do -0.0058', count: 4 },
-            { range: '-0.0058 do -0.0039', count: 10 },
-            { range: '-0.0039 do -0.0019', count: 7 },
-            { range: '-0.0019 do 0', count: 11 },
-            { range: '0 do 0.0019', count: 9 },
-            { range: '0.0019 do 0.0039', count: 11 },
-            { range: '0.0039 do 0.0058', count: 8 },
-            { range: '0.0058 do 0.0077', count: 5 },
-            { range: '0.0077 do 0.0097', count: 1 },
-            { range: '0.0097 do 0.0116', count: 3 },
-            { range: '0.0116 do 0.0136', count: 1 },
-        ];
+    useEffect(() => {
+        const loadCurrencies = async () => {
+            const codes = await fetchCodes();
+            setCurrencies(codes);
+        };
+        loadCurrencies();
+    }, []);
+
+    const currencyOptions = currencies.map(code => (
+        <option key={code} value={code}>
+            {code}
+        </option>
+    ));
+    const currencyOptions2 = currencies.map(code => (
+        <option key={code} value={code} disabled={code === selectedCurrency1}>
+            {code}
+        </option>
+    ));
+
+    const mapChangeDistributionToData = (data: ChangeDistributionItem[]): DistributionItem[] => {
+        return data.map(({ min, max, count }) => ({
+            range: `${min.toFixed(4)} to ${max.toFixed(4)}`,
+            count,
+        }));
     };
 
-    const [distributionData, setDistributionData] = useState<DistributionItem[]>(() =>
-        getMockDistributionData()
-    );
-    const [isMockData, setIsMockData] = useState<boolean>(false);
+    const [distributionData, setDistributionData] = useState<DistributionItem[]>([]);
 
     useEffect(() => {
         let isCancelled = false;
 
         const run = async () => {
-            try {
-                const query = new URLSearchParams({
-                    baseCurrency,
-                    pair: selectedPair,
-                    type: analysisType,
-                });
-                const data = await backendGetJson<DistributionItem[]>(
-                    `/api/distribution?${query.toString()}`
-                );
-                if (isCancelled) return;
-                setDistributionData(data);
-                setIsMockData(false);
-            } catch (error) {
-                if (isCancelled) return;
-                setDistributionData(getMockDistributionData());
-                setIsMockData(isBackendConnectivityError(error));
+            //YYYY-MM-DD
+            if (!beginDate) {
+                setCurrencyRate1([]);
+                return;
             }
+
+            const data = await fetchSingleCurrencyRateForCustomPeriod(
+                new Date(beginDate),
+                analysisType,
+                selectedCurrency1
+            );
+
+            if (isCancelled) {
+                return;
+            }
+
+            setCurrencyRate1(data);
         };
 
         run();
         return () => {
             isCancelled = true;
         };
-    }, [analysisType, baseCurrency, selectedPair]);
+    }, [selectedCurrency1, analysisType, beginDate]);
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        const run = async () => {
+            //YYYY-MM-DD
+            if (!beginDate) {
+                setCurrencyRate2([]);
+                return;
+            }
+
+            const data = await fetchSingleCurrencyRateForCustomPeriod(
+                new Date(beginDate),
+                analysisType,
+                selectedCurrency2
+            );
+
+            if (isCancelled) {
+                return;
+            }
+
+            setCurrencyRate2(data);
+        };
+
+        run();
+        return () => {
+            isCancelled = true;
+        };
+    }, [selectedCurrency2, analysisType, beginDate]);
+
+    useEffect(() => {
+        let isCancelled = false;
+        console.log('effect');
+
+        const run = async () => {
+            const distribution = calculateChangeDistribution(currencyRate1, currencyRate2, 14);
+
+            if (isCancelled) {
+                return;
+            }
+
+            setChangeDistribution(distribution);
+            setDistributionData(mapChangeDistributionToData(distribution));
+        };
+
+        run();
+        return () => {
+            isCancelled = true;
+        };
+    }, [currencyRate1, currencyRate2]);
 
     const maxCount = Math.max(...distributionData.map(d => d.count));
+
+    const pairLabel =
+        selectedCurrency1 && selectedCurrency2
+            ? ` - ${selectedCurrency1}/${selectedCurrency2}`
+            : '';
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                Rozkład zmian {analysisType === 'monthly' ? 'miesięcznych' : 'kwartalnych'}
+                {analysisType === 'MONTH' ? 'Monthly' : 'Quarterly'} change distribution
             </h3>
-            {isMockData && (
-                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    Dane makietowe (brak połączenia z backendem).
-                </div>
-            )}
 
             {/* Controls */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Para walutowa
-                    </label>
-                    <select
-                        value={selectedPair}
-                        onChange={e => setSelectedPair(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                        {currencyPairs.map(pair => (
-                            <option key={pair} value={pair}>
-                                {pair}
-                            </option>
-                        ))}
-                    </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Currency
+                        </label>
+                        <select
+                            value={selectedCurrency1}
+                            onChange={e => setSelectedCurrency1(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Select currency</option>
+                            {currencyOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Currency
+                        </label>
+                        <select
+                            value={selectedCurrency2}
+                            onChange={e => setSelectedCurrency2(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Select currency</option>
+                            {currencyOptions2}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Begin date
+                        </label>
+                        <input
+                            value={beginDate}
+                            onChange={e => setBeginDate(e.target.value)}
+                            type="text"
+                            pattern="^\d{4}-\d{2}-\d{2}$"
+                            placeholder="YYYY-MM-DD"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Analysis type
+                        </label>
+                        <select
+                            value={analysisType}
+                            onChange={e => setAnalysisType(e.target.value as Period)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="MONTH">Monthly</option>
+                            <option value="QUARTER">Quarterly</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Typ analizy
-                    </label>
-                    <select
-                        value={analysisType}
-                        onChange={e => setAnalysisType(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                        <option value="monthly">Miesięczne</option>
-                        <option value="quarterly">Kwartalne</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Widok</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">View</label>
                     <div className="flex bg-gray-100 rounded-lg p-1">
                         <button
                             onClick={() => setViewType('chart')}
@@ -129,7 +226,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = ({ base
                             }`}
                         >
                             <BarChart2 className="h-4 w-4 mr-1" />
-                            Wykres
+                            Chart
                         </button>
                         <button
                             onClick={() => setViewType('table')}
@@ -140,7 +237,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = ({ base
                             }`}
                         >
                             <Table2 className="h-4 w-4 mr-1" />
-                            Tabela
+                            Table
                         </button>
                     </div>
                 </div>
@@ -150,7 +247,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = ({ base
             {viewType === 'chart' && (
                 <div className="mb-6">
                     <h4 className="text-lg font-medium text-gray-800 mb-4">
-                        Histogram częstości występowania zmian - {selectedPair}
+                        Frequency Histogram of Changes{pairLabel}
                     </h4>
                     <div className="bg-gray-50 p-4 rounded-lg">
                         <div className="space-y-2">
@@ -187,10 +284,10 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = ({ base
                         <thead>
                             <tr className="bg-blue-50">
                                 <th className="border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800">
-                                    Przedział
+                                    Interval
                                 </th>
                                 <th className="border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-gray-800">
-                                    Liczba zmian
+                                    Count of changes
                                 </th>
                             </tr>
                         </thead>
