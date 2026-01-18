@@ -159,6 +159,60 @@ export async function fetchCurrencies(): Promise<string[]> {
     }
 }
 
+export async function fetchLatestCurrencyRateBeforeDate(
+    referenceDate: Date,
+    currency: string
+): Promise<SingleCurrencyRate | undefined> {
+    if (currency === 'PLN') {
+        // Fake PLN rates - this is reference currency.
+        const precedingDate = new Date(referenceDate);
+        precedingDate.setDate(precedingDate.getDate() - 1);
+
+        return {
+            no: '',
+            effectiveDate: precedingDate.toISOString().split('T')[0],
+            mid: 1.0,
+        };
+    }
+
+    try {
+        const dateSince = new Date(referenceDate);
+        dateSince.setDate(dateSince.getDate() - 7);
+        const dateUntil = new Date(referenceDate);
+        dateUntil.setDate(dateUntil.getDate() - 1);
+
+        const ratesTable: SingleCurrencyTable = await backendGetJson(
+            `/exchangerates/rates/A/${currency}/${dateSince.toISOString().split('T')[0]}/${dateUntil.toISOString().split('T')[0]}`
+        );
+
+        const precedingRate = ratesTable.rates.reduce(
+            (latest, rate) => (rate.effectiveDate > latest.effectiveDate ? rate : latest),
+            ratesTable.rates[0]
+        );
+
+        setUsingMockData(false);
+        return precedingRate;
+    } catch (error) {
+        if (isConnectivityError(error)) {
+            setUsingMockData(true);
+            return undefined;
+        }
+        throw error;
+    }
+}
+
+export async function fetchLatestCurrencyRateBeforePeriod(
+    periodEndDate: Date,
+    period: Period,
+    currency: string
+): Promise<SingleCurrencyRate | undefined> {
+    const periodDays = DAYS_BY_PERIOD[period];
+    const periodStartDate = new Date(periodEndDate);
+    periodStartDate.setDate(periodEndDate.getDate() - periodDays);
+
+    return fetchLatestCurrencyRateBeforeDate(periodStartDate, currency);
+}
+
 export async function fetchSingleCurrencyRateForDateRange(
     beginDate: Date,
     endDate: Date,
@@ -211,7 +265,6 @@ export async function fetchSingleCurrencyRateForPeriod(
     period: Period,
     currency: string
 ): Promise<SingleCurrencyRate[]> {
-    console.log(currency);
     const today: Date = new Date();
     const numDays = DAYS_BY_PERIOD[period];
     const past = new Date();

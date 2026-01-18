@@ -1,7 +1,7 @@
 import type { SingleCurrencyRate } from '../api/nbpApi';
 
 export function countTotalSessions(rates: SingleCurrencyRate[]): number {
-    return rates.length;
+    return Math.max(0, rates.length - 1);
 }
 
 export function countRisingSessions(rates: SingleCurrencyRate[]): number {
@@ -38,4 +38,28 @@ export function countStableSessions(rates: SingleCurrencyRate[]): number {
         }
     }
     return count;
+}
+
+export function getRisingPercentage(rates: SingleCurrencyRate[]): number | undefined {
+    const totalSessions = countTotalSessions(rates);
+    if (totalSessions === 0) {
+        return undefined;
+    }
+    return (countRisingSessions(rates) / totalSessions) * 100;
+}
+
+export function getFallingPercentage(rates: SingleCurrencyRate[]): number | undefined {
+    const totalSessions = countTotalSessions(rates);
+    if (totalSessions === 0) {
+        return undefined;
+    }
+    return (countFallingSessions(rates) / totalSessions) * 100;
+}
+
+export function getStablePercentage(rates: SingleCurrencyRate[]): number | undefined {
+    const totalSessions = countTotalSessions(rates);
+    if (totalSessions === 0) {
+        return undefined;
+    }
+    return (countStableSessions(rates) / totalSessions) * 100;
 }
