@@ -5,6 +5,9 @@ import {
     countRisingSessions,
     countStableSessions,
     countTotalSessions,
+    getFallingPercentage,
+    getRisingPercentage,
+    getStablePercentage,
 } from '../utils/sessionAnalysisUtil';
 import {
     fetchLatestCurrencyRateBeforePeriod,
@@ -50,12 +53,9 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
         {
             title: 'Rising sessions',
             value: sessionData ? countRisingSessions(sessionData) : '---',
-            percentage: sessionData
-                ? (
-                      (countRisingSessions(sessionData) / countTotalSessions(sessionData)) *
-                      100
-                  ).toFixed(1)
-                : '---',
+            percentage: !sessionData
+                ? '---'
+                : (getRisingPercentage(sessionData)?.toFixed(1) ?? '---'),
             icon: TrendingUp,
             color: 'text-green-600',
             bg: 'bg-green-50',
@@ -63,12 +63,9 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
         {
             title: 'Falling sessions',
             value: sessionData ? countFallingSessions(sessionData) : '---',
-            percentage: sessionData
-                ? (
-                      (countFallingSessions(sessionData) / countTotalSessions(sessionData)) *
-                      100
-                  ).toFixed(1)
-                : '---',
+            percentage: !sessionData
+                ? '---'
+                : (getFallingPercentage(sessionData)?.toFixed(1) ?? '---'),
             icon: TrendingDown,
             color: 'text-red-600',
             bg: 'bg-red-50',
@@ -76,12 +73,9 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
         {
             title: 'Stable sessions',
             value: sessionData ? countStableSessions(sessionData) : '---',
-            percentage: sessionData
-                ? (
-                      (countStableSessions(sessionData) / countTotalSessions(sessionData)) *
-                      100
-                  ).toFixed(1)
-                : '---',
+            percentage: !sessionData
+                ? '---'
+                : (getStablePercentage(sessionData)?.toFixed(1) ?? '---'),
             icon: Minus,
             color: 'text-gray-600',
             bg: 'bg-gray-50',
