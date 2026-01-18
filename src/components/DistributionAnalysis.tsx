@@ -121,7 +121,6 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                 if (isCancelled) {
                     return;
                 }
-                console.log('Failed to fetch currency 2 rates');
                 setCurrencyRate2([]);
             }
         };
@@ -136,9 +135,6 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
         let isCancelled = false;
 
         const run = async () => {
-            console.log('Calculating distribution');
-            console.log('Currency 1 rates:', currencyRate1);
-            console.log('Currency 2 rates:', currencyRate2);
             const distribution = calculateChangeDistribution(currencyRate1, currencyRate2, 14);
 
             if (isCancelled) {
@@ -362,7 +358,6 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                                 !analysisPeriod
                             ) {
                                 event.preventDefault();
-                                console.log('Disabled');
                             }
                         }}
                     >
