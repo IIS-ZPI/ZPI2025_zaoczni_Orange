@@ -41,6 +41,7 @@ export const StatisticalMeasures: React.FC<StatisticalMeasuresProps> = ({
                 setCurrencyRates(data);
             } catch {
                 if (isCancelled) return;
+                setCurrencyRates([]);
             }
         };
 
