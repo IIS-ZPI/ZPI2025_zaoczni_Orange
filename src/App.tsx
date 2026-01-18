@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Banknote, TrendingUp, BarChart3 } from 'lucide-react';
 import './App.css';
 import { CurrencySelector } from './components/CurrencySelector';
 import { SessionAnalysis } from './components/SessionAnalysis';
 import { StatisticalMeasures } from './components/StatisticalMeasures';
 import { Period } from './api/nbpApi';
+import { DistributionAnalysis } from './components/DistributionAnalysis';
+import AlertMessage from './components/AlertMessage';
+import { getUsingMockData, subscribeUsingMockData } from './services/mockDataStatus';
 
 const DEFAULT_CURRENCY_CODE = 'USD';
 
 function App() {
     const [selectedCurrency, setSelectedCurrency] = useState<string>(DEFAULT_CURRENCY_CODE);
     const [selectedPeriod, setSelectedPeriod] = useState<Period>('MONTH');
+    const [usingMockData, setUsingMockData] = useState<boolean>(() => getUsingMockData());
+
+    useEffect(() => {
+        return subscribeUsingMockData(setUsingMockData);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
@@ -47,6 +55,9 @@ function App() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {usingMockData && (
+                    <AlertMessage className="sticky top-4 z-50" message="Invalid data request" />
+                )}
                 {/* Currency and Period Selection */}
                 <CurrencySelector
                     selectedCurrency={selectedCurrency}
@@ -62,7 +73,7 @@ function App() {
                 <StatisticalMeasures currencyCode={selectedCurrency} period={selectedPeriod} />
 
                 {/* Distribution Analysis */}
-                {/* <DistributionAnalysis baseCurrency={selectedCurrency} /> */}
+                <DistributionAnalysis baseCurrency={selectedCurrency} />
             </main>
 
             {/* Footer */}
