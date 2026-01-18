@@ -189,17 +189,9 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                             Begin date
                         </label>
                         <input
-                            value={beginDate}
-                            onChange={e =>
-                                setBeginDate(
-                                    /\d{4}-\d{2}-\d{2}/.test(e.target.value)
-                                        ? e.target.value
-                                        : undefined
-                                )
-                            }
-                            type="text"
-                            pattern="^\d{4}-\d{2}-\d{2}$"
-                            placeholder="YYYY-MM-DD"
+                            value={beginDate ?? ''}
+                            onChange={e => setBeginDate(e.target.value || undefined)}
+                            type="date"
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>

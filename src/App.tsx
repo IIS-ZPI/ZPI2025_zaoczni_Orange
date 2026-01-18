@@ -1,17 +1,23 @@
-import { useState } from 'react';
-import { Banknote, TrendingUp, BarChart3 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Banknote, TrendingUp, BarChart3, AlertTriangle } from 'lucide-react';
 import './App.css';
 import { CurrencySelector } from './components/CurrencySelector';
 import { SessionAnalysis } from './components/SessionAnalysis';
 import { StatisticalMeasures } from './components/StatisticalMeasures';
 import { Period } from './api/nbpApi';
 import { DistributionAnalysis } from './components/DistributionAnalysis';
+import { getUsingMockData, subscribeUsingMockData } from './services/mockDataStatus';
 
 const DEFAULT_CURRENCY_CODE = 'USD';
 
 function App() {
     const [selectedCurrency, setSelectedCurrency] = useState<string>(DEFAULT_CURRENCY_CODE);
     const [selectedPeriod, setSelectedPeriod] = useState<Period>('MONTH');
+    const [usingMockData, setUsingMockData] = useState<boolean>(() => getUsingMockData());
+
+    useEffect(() => {
+        return subscribeUsingMockData(setUsingMockData);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
@@ -48,6 +54,16 @@ function App() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {usingMockData && (
+                    <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5" />
+                            <span className="text-sm font-medium">
+                                Mock data (no backend connection).
+                            </span>
+                        </div>
+                    </div>
+                )}
                 {/* Currency and Period Selection */}
                 <CurrencySelector
                     selectedCurrency={selectedCurrency}
