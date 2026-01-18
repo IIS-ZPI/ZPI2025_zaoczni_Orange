@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+    zpi-web:
+        container_name: zpi-web
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - '5173:5173'
+        networks:
+            - zpi-network
+networks:
+    zpi-network:
+        driver: bridge
+
+## tips and tricks
+# docker compose -f docker-compose.local.yml up -d
+# docker compose -f docker-compose.local.yml down
