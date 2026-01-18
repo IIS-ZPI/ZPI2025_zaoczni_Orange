@@ -7,6 +7,7 @@ import {
     countTotalSessions,
 } from '../utils/sessionAnalysisUtil';
 import {
+    fetchLatestCurrencyRateBeforePeriod,
     fetchSingleCurrencyRateForPeriod,
     LABEL_BY_PERIOD,
     Period,
@@ -28,7 +29,12 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
         const run = async () => {
             try {
                 const rates = await fetchSingleCurrencyRateForPeriod(period, currency);
-                setSessionData(rates);
+                const precedingRate = await fetchLatestCurrencyRateBeforePeriod(
+                    new Date(),
+                    period,
+                    currency
+                );
+                setSessionData(precedingRate ? [precedingRate, ...rates] : rates);
             } catch {
                 if (isCancelled) return;
             }
