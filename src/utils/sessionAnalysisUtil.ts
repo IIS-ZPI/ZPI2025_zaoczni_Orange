@@ -1,7 +1,7 @@
 import type { SingleCurrencyRate } from '../api/nbpApi';
 
 export function countTotalSessions(rates: SingleCurrencyRate[]): number {
-    return rates.length;
+    return rates.length - 1;
 }
 
 export function countRisingSessions(rates: SingleCurrencyRate[]): number {
