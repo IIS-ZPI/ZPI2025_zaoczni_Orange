@@ -40,6 +40,7 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
                 setSessionData(precedingRate ? [precedingRate, ...rates] : rates);
             } catch {
                 if (isCancelled) return;
+                setSessionData([]);
             }
         };
 

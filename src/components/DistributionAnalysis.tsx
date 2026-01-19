@@ -8,6 +8,7 @@ import {
 } from '../api/nbpApi';
 import { calculateChangeDistribution, ChangeDistributionItem } from '../utils/changeDistribution';
 import { CSVLink } from 'react-csv';
+import AlertMessage from './AlertMessage';
 
 interface DistributionAnalysisProps {
     baseCurrency: string;
@@ -67,17 +68,25 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                 return;
             }
 
-            const data = await fetchSingleCurrencyRateForCustomPeriod(
-                new Date(beginDate),
-                analysisPeriod,
-                selectedCurrency1
-            );
+            try {
+                const data = await fetchSingleCurrencyRateForCustomPeriod(
+                    new Date(beginDate),
+                    analysisPeriod,
+                    selectedCurrency1
+                );
 
-            if (isCancelled) {
-                return;
+                if (isCancelled) {
+                    return;
+                }
+
+                setCurrencyRate1(data);
+            } catch {
+                if (isCancelled) {
+                    return;
+                }
+
+                setCurrencyRate1([]);
             }
-
-            setCurrencyRate1(data);
         };
 
         run();
@@ -96,17 +105,24 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                 return;
             }
 
-            const data = await fetchSingleCurrencyRateForCustomPeriod(
-                new Date(beginDate),
-                analysisPeriod,
-                selectedCurrency2
-            );
+            try {
+                const data = await fetchSingleCurrencyRateForCustomPeriod(
+                    new Date(beginDate),
+                    analysisPeriod,
+                    selectedCurrency2
+                );
 
-            if (isCancelled) {
-                return;
+                if (isCancelled) {
+                    return;
+                }
+
+                setCurrencyRate2(data);
+            } catch {
+                if (isCancelled) {
+                    return;
+                }
+                setCurrencyRate2([]);
             }
-
-            setCurrencyRate2(data);
         };
 
         run();
@@ -117,7 +133,6 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
 
     useEffect(() => {
         let isCancelled = false;
-        console.log('effect');
 
         const run = async () => {
             const distribution = calculateChangeDistribution(currencyRate1, currencyRate2, 14);
@@ -145,6 +160,8 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
 
     const allCriteriaSelected =
         !!selectedCurrency1 && !!selectedCurrency2 && !!beginDate && !!analysisPeriod;
+
+    const noDataToShow = changeDistribution.length === 0;
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6">
@@ -252,7 +269,9 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                         </p>
                     )}
 
-                    {!!allCriteriaSelected && (
+                    {noDataToShow && <AlertMessage message="No data" />}
+
+                    {!!allCriteriaSelected && !noDataToShow && (
                         <div className="bg-gray-50 p-4 rounded-lg">
                             <div className="space-y-2">
                                 {distributionData.map((item, index) => (
@@ -291,7 +310,9 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                         </p>
                     )}
 
-                    {!!allCriteriaSelected && (
+                    {noDataToShow && <AlertMessage message="No data" />}
+
+                    {!!allCriteriaSelected && !noDataToShow && (
                         <table className="w-full border-collapse border border-gray-200 rounded-lg">
                             <thead>
                                 <tr className="bg-blue-50">
@@ -324,7 +345,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
             )}
 
             {/* Download CSV link */}
-            {!!allCriteriaSelected && (
+            {!noDataToShow && (
                 <div>
                     <CSVLink
                         data={changeDistribution}
@@ -337,7 +358,6 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                                 !analysisPeriod
                             ) {
                                 event.preventDefault();
-                                console.log('Disabled');
                             }
                         }}
                     >

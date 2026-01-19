@@ -77,10 +77,16 @@ export async function backendGetJson<T>(path: string, options: BackendApiOptions
         });
 
         if (!response.ok) {
+            setUsingMockData(true);
             throw new Error(`HTTP_${response.status}`);
         }
 
         return (await response.json()) as T;
+    } catch (error: any) {
+        if (isConnectivityError(error)) {
+            setUsingMockData(true);
+        }
+        throw error;
     } finally {
         window.clearTimeout(timeoutId);
     }
@@ -94,69 +100,24 @@ function isConnectivityError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     return (
         message === 'BACKEND_URL_NOT_CONFIGURED' ||
-        message.startsWith('HTTP_') ||
         message.toLowerCase().includes('failed to fetch')
     );
 }
 
-function generateMockRates(beginDate: Date, endDate: Date, currency: string): SingleCurrencyRate[] {
-    const rates: SingleCurrencyRate[] = [];
-    const currentDate = new Date(beginDate);
-
-    const base =
-        currency === 'USD' ? 4.0 : currency === 'EUR' ? 4.3 : currency === 'GBP' ? 5.0 : 4.2;
-
-    let idx = 0;
-    while (currentDate <= endDate) {
-        const day = idx;
-        const seasonal = Math.sin(day / 6) * 0.03;
-        const drift = (day % 17) * 0.0008;
-        const mid = Number((base + seasonal + drift).toFixed(4));
-
-        rates.push({
-            no: `MOCK/${currency}/${String(idx + 1).padStart(3, '0')}`,
-            effectiveDate: currentDate.toISOString().split('T')[0],
-            mid,
-        });
-
-        currentDate.setDate(currentDate.getDate() + 1);
-        idx += 1;
-    }
-
-    return rates;
-}
-
 export async function fetchCodes(): Promise<string[]> {
-    try {
-        const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
+    const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
 
-        setUsingMockData(false);
-        const tableAWithType = tableA.map(table => ({ ...table, tableType: 'A' }));
-        const currencyCodes = [
-            ...new Set(tableAWithType.flatMap(table => table.rates.map(rate => rate.code))),
-        ].sort();
-        return currencyCodes;
-    } catch (error) {
-        if (isConnectivityError(error)) {
-            setUsingMockData(true);
-            return ['USD', 'EUR', 'GBP'];
-        }
-        throw error;
-    }
+    setUsingMockData(false);
+    const tableAWithType = tableA.map(table => ({ ...table, tableType: 'A' }));
+    const currencyCodes = [
+        ...new Set(tableAWithType.flatMap(table => table.rates.map(rate => rate.code))),
+    ].sort();
+    return currencyCodes;
 }
 
 export async function fetchCurrencies(): Promise<string[]> {
-    try {
-        const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
-        setUsingMockData(false);
-        return tableA.flatMap(table => table.rates.map(rate => rate.currency));
-    } catch (error) {
-        if (isConnectivityError(error)) {
-            setUsingMockData(true);
-            return ['US dollar', 'Euro', 'British pound'];
-        }
-        throw error;
-    }
+    const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
+    return tableA.flatMap(table => table.rates.map(rate => rate.currency));
 }
 
 export async function fetchLatestCurrencyRateBeforeDate(
@@ -175,30 +136,26 @@ export async function fetchLatestCurrencyRateBeforeDate(
         };
     }
 
-    try {
-        const dateSince = new Date(referenceDate);
-        dateSince.setDate(dateSince.getDate() - 7);
-        const dateUntil = new Date(referenceDate);
-        dateUntil.setDate(dateUntil.getDate() - 1);
+    const dateSince = new Date(referenceDate);
+    dateSince.setDate(dateSince.getDate() - 7);
+    const dateUntil = new Date(referenceDate);
+    dateUntil.setDate(dateUntil.getDate() - 1);
 
-        const ratesTable: SingleCurrencyTable = await backendGetJson(
-            `/exchangerates/rates/A/${currency}/${dateSince.toISOString().split('T')[0]}/${dateUntil.toISOString().split('T')[0]}`
-        );
+    const ratesTable: SingleCurrencyTable = await backendGetJson(
+        `/exchangerates/rates/A/${currency}/${dateSince.toISOString().split('T')[0]}/${dateUntil.toISOString().split('T')[0]}`
+    );
 
-        const precedingRate = ratesTable.rates.reduce(
-            (latest, rate) => (rate.effectiveDate > latest.effectiveDate ? rate : latest),
-            ratesTable.rates[0]
-        );
-
-        setUsingMockData(false);
-        return precedingRate;
-    } catch (error) {
-        if (isConnectivityError(error)) {
-            setUsingMockData(true);
-            return undefined;
-        }
-        throw error;
+    if (ratesTable.rates.length === 0) {
+        return undefined;
     }
+
+    const precedingRate = ratesTable.rates.reduce(
+        (latest, rate) => (rate.effectiveDate > latest.effectiveDate ? rate : latest),
+        ratesTable.rates[0]
+    );
+
+    setUsingMockData(false);
+    return precedingRate;
 }
 
 export async function fetchLatestCurrencyRateBeforePeriod(
@@ -233,20 +190,12 @@ export async function fetchSingleCurrencyRateForDateRange(
         return rates;
     }
 
-    try {
-        const ratesTable: SingleCurrencyTable = await backendGetJson(
-            `/exchangerates/rates/A/${currency}/${beginDate.toISOString().split('T')[0]}/${endDate.toISOString().split('T')[0]}`
-        );
+    const ratesTable: SingleCurrencyTable = await backendGetJson(
+        `/exchangerates/rates/A/${currency}/${beginDate.toISOString().split('T')[0]}/${endDate.toISOString().split('T')[0]}`
+    );
 
-        setUsingMockData(false);
-        return ratesTable.rates;
-    } catch (error) {
-        if (isConnectivityError(error)) {
-            setUsingMockData(true);
-            return generateMockRates(beginDate, endDate, currency);
-        }
-        throw error;
-    }
+    setUsingMockData(false);
+    return ratesTable.rates;
 }
 
 export async function fetchSingleCurrencyRateForCustomPeriod(
