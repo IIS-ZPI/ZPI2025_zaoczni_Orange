@@ -103,6 +103,8 @@ Triggered automatically upon pushing to the `release` branch.
 
 ## 🧪 Test Automation
 
+All tests are **fully automated** through **GitHub Actions CI/CD pipeline**, ensuring consistent quality gates and preventing broken code from reaching production.
+
 ### Testing Framework
 
 - **Unit Testing:** Jest with ts-jest preset
