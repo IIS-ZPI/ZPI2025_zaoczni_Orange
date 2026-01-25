@@ -98,6 +98,7 @@ Triggered automatically upon pushing to the `release` branch.
 - **GitHub Release:** Automated release notes generation
 - **Dockerization:** Production Docker image build and push to GHCR
 - **Deployment:** SSH-based deployment to OVH VPS
+- **Production URL:** http://57.128.197.208:5173/
 
 ---
 
