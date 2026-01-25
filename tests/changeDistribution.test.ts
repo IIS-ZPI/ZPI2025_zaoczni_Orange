@@ -1,4 +1,7 @@
-import { calculateChangeDistribution } from '../src/utils/changeDistribution';
+import {
+    calculateChangeDistribution,
+    getMaxPeriodBeginDate,
+} from '../src/utils/changeDistribution';
 
 function buildRates(mids: number[], startDay: number = 1) {
     return mids.map((m, i) => ({
@@ -90,5 +93,37 @@ describe('calculateChangeDistribution', () => {
 
             expect(res.reduce((s, r) => s + r.count, 0)).toBe(0);
         });
+    });
+});
+
+describe('getMaxPeriodBeginDate', () => {
+    test('subtracts days from provided end date', () => {
+        const end = new Date('2025-01-08T00:00:00Z');
+        const begin = getMaxPeriodBeginDate('WEEK' as any, end);
+        expect(begin.toISOString().split('T')[0]).toBe('2025-01-01');
+    });
+
+    test('end date remains unchanged when begin date is calculated', () => {
+        const end = new Date('2025-02-01T00:00:00Z');
+        getMaxPeriodBeginDate('MONTH' as any, end);
+        expect(end.toISOString().split('T')[0]).toBe('2025-02-01');
+    });
+
+    test('uses current date when end date omitted', () => {
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date('2025-03-15T00:00:00Z'));
+        const begin = getMaxPeriodBeginDate('TWO_WEEKS' as any);
+        expect(begin.toISOString().split('T')[0]).toBe('2025-03-01');
+        jest.useRealTimers();
+    });
+
+    test('works for different periods', () => {
+        const end = new Date('2025-08-14T00:00:00Z');
+        const beginMonth = getMaxPeriodBeginDate('MONTH' as any, end);
+        // Only month with 31 days gives exactly same date in previous month
+        expect(beginMonth.toISOString().split('T')[0]).toBe('2025-07-14');
+        const beginYear = getMaxPeriodBeginDate('YEAR' as any, end);
+        // Only non-leap year gives exactly same date in previous year
+        expect(beginYear.toISOString().split('T')[0]).toBe('2024-08-14');
     });
 });

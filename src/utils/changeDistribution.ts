@@ -1,4 +1,4 @@
-import { SingleCurrencyRate } from '../api/nbpApi';
+import { DAYS_BY_PERIOD, Period, SingleCurrencyRate } from '../api/nbpApi';
 
 export type ChangeDistributionItem = {
     min: number;
@@ -60,4 +60,11 @@ export function calculateChangeDistribution(
     });
 
     return changeDistribution;
+}
+
+export function getMaxPeriodBeginDate(period: Period, maxPeriodEndDate?: Date): Date {
+    const numDays = DAYS_BY_PERIOD[period];
+    const beginDate = maxPeriodEndDate ? new Date(maxPeriodEndDate) : new Date();
+    beginDate.setDate(beginDate.getDate() - numDays);
+    return beginDate;
 }

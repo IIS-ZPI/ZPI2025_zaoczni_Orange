@@ -22,4 +22,5 @@ export function getEnvVar(name: string, fallback?: string): string | undefined {
 export const config = {
     backendUrl: getEnvVar('VITE_BACKEND_URL', 'http://localhost:3000'),
     nbpApiUrl: getEnvVar('VITE_NBP_API_BASE_URL', 'https://api.nbp.pl/api'),
+    nbpMinAllowedDate: getEnvVar('VITE_NBP_MIN_ALLOWED_DATE', '2002-01-02'),
 } as const;
