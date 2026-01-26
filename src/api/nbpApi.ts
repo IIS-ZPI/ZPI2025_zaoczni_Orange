@@ -39,7 +39,7 @@ export const LABEL_BY_PERIOD: Record<Period, string> = {
     YEAR: 'last year',
 };
 
-const DAYS_BY_PERIOD: Record<Period, number> = {
+export const DAYS_BY_PERIOD: Record<Period, number> = {
     WEEK: 7,
     TWO_WEEKS: 14,
     MONTH: 31,

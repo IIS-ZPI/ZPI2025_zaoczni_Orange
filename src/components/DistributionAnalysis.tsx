@@ -6,9 +6,15 @@ import {
     Period,
     SingleCurrencyRate,
 } from '../api/nbpApi';
-import { calculateChangeDistribution, ChangeDistributionItem } from '../utils/changeDistribution';
+import {
+    calculateChangeDistribution,
+    ChangeDistributionItem,
+    getMaxPeriodBeginDate,
+} from '../utils/changeDistribution';
 import { CSVLink } from 'react-csv';
 import AlertMessage from './AlertMessage';
+import { config } from '../utils/config';
+import { LoadingOverlay } from './LoadingOverlay';
 
 interface DistributionAnalysisProps {
     baseCurrency: string;
@@ -29,6 +35,27 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
     const [currencyRate1, setCurrencyRate1] = useState<SingleCurrencyRate[]>([]);
     const [currencyRate2, setCurrencyRate2] = useState<SingleCurrencyRate[]>([]);
     const [changeDistribution, setChangeDistribution] = useState<ChangeDistributionItem[]>([]);
+    const [currency1Loading, setCurrency1Loading] = useState<boolean>(false);
+    const [currency2Loading, setCurrency2Loading] = useState<boolean>(false);
+    const [calculationLoading, setCalculationLoading] = useState<boolean>(false);
+
+    const maxAllowedBeginDate = analysisPeriod
+        ? getMaxPeriodBeginDate(analysisPeriod).toISOString().split('T')[0]
+        : undefined;
+    const minAllowedBeginDate = config.nbpMinAllowedDate;
+
+    console.log(minAllowedBeginDate);
+
+    const beginDateTooLate =
+        !!beginDate && !!maxAllowedBeginDate && beginDate > maxAllowedBeginDate;
+    const beginDateTooEarly =
+        !!beginDate && !!minAllowedBeginDate && beginDate < minAllowedBeginDate;
+
+    const allCriteriaSelected =
+        !!selectedCurrency1 && !!selectedCurrency2 && !!beginDate && !!analysisPeriod;
+    const validRequestParams = allCriteriaSelected && !beginDateTooLate && !beginDateTooEarly;
+
+    const loading = currency1Loading || currency2Loading || calculationLoading;
 
     useEffect(() => {
         const loadCurrencies = async () => {
@@ -62,13 +89,13 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
         let isCancelled = false;
 
         const run = async () => {
-            //YYYY-MM-DD
-            if (!beginDate) {
+            if (!validRequestParams) {
                 setCurrencyRate1([]);
                 return;
             }
 
             try {
+                setCurrency1Loading(true);
                 const data = await fetchSingleCurrencyRateForCustomPeriod(
                     new Date(beginDate),
                     analysisPeriod,
@@ -86,6 +113,8 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                 }
 
                 setCurrencyRate1([]);
+            } finally {
+                setCurrency1Loading(false);
             }
         };
 
@@ -93,19 +122,19 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
         return () => {
             isCancelled = true;
         };
-    }, [selectedCurrency1, analysisPeriod, beginDate]);
+    }, [selectedCurrency1, analysisPeriod, beginDate, validRequestParams]);
 
     useEffect(() => {
         let isCancelled = false;
 
         const run = async () => {
-            //YYYY-MM-DD
-            if (!beginDate) {
+            if (!validRequestParams) {
                 setCurrencyRate2([]);
                 return;
             }
 
             try {
+                setCurrency2Loading(true);
                 const data = await fetchSingleCurrencyRateForCustomPeriod(
                     new Date(beginDate),
                     analysisPeriod,
@@ -122,6 +151,8 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                     return;
                 }
                 setCurrencyRate2([]);
+            } finally {
+                setCurrency2Loading(false);
             }
         };
 
@@ -129,12 +160,19 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
         return () => {
             isCancelled = true;
         };
-    }, [selectedCurrency2, analysisPeriod, beginDate]);
+    }, [selectedCurrency2, analysisPeriod, beginDate, validRequestParams]);
 
     useEffect(() => {
         let isCancelled = false;
 
         const run = async () => {
+            if (!validRequestParams) {
+                setChangeDistribution([]);
+                setDistributionData([]);
+                return;
+            }
+
+            setCalculationLoading(true);
             const distribution = calculateChangeDistribution(currencyRate1, currencyRate2, 14);
 
             if (isCancelled) {
@@ -143,13 +181,15 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
 
             setChangeDistribution(distribution);
             setDistributionData(mapChangeDistributionToData(distribution));
+
+            setCalculationLoading(false);
         };
 
         run();
         return () => {
             isCancelled = true;
         };
-    }, [currencyRate1, currencyRate2]);
+    }, [currencyRate1, currencyRate2, validRequestParams]);
 
     const maxCount = Math.max(...distributionData.map(d => d.count));
 
@@ -158,10 +198,25 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
             ? ` - ${selectedCurrency1}/${selectedCurrency2}`
             : '';
 
-    const allCriteriaSelected =
-        !!selectedCurrency1 && !!selectedCurrency2 && !!beginDate && !!analysisPeriod;
-
     const noDataToShow = changeDistribution.length === 0;
+
+    const errorSection = (
+        <>
+            {beginDateTooLate && (
+                <AlertMessage
+                    message={`Selected period includes future - last allowed begin date is ${new Date(maxAllowedBeginDate!).toLocaleDateString()}`}
+                />
+            )}
+
+            {beginDateTooEarly && (
+                <AlertMessage
+                    message={`Selected period exceeds archived data - earliest allowed begin date is ${new Date(minAllowedBeginDate!).toLocaleDateString()}`}
+                />
+            )}
+
+            {validRequestParams && noDataToShow && <AlertMessage message="No data" />}
+        </>
+    );
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6">
@@ -207,7 +262,9 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                         </label>
                         <input
                             value={beginDate ?? ''}
-                            onChange={e => setBeginDate(e.target.value || undefined)}
+                            min={minAllowedBeginDate}
+                            max={maxAllowedBeginDate}
+                            onChange={e => setBeginDate(e.target.value)}
                             type="date"
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
@@ -258,10 +315,12 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
 
             {/* Chart View */}
             {viewType === 'chart' && (
-                <div className="mb-6">
+                <div className="relative mb-6">
                     <h4 className="text-lg font-medium text-gray-800 mb-4">
                         Frequency Histogram of Changes{pairLabel}
                     </h4>
+
+                    {loading && <LoadingOverlay />}
 
                     {!allCriteriaSelected && (
                         <p className="text-sm text-gray-600 mb-6">
@@ -269,9 +328,9 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                         </p>
                     )}
 
-                    {noDataToShow && <AlertMessage message="No data" />}
+                    {errorSection}
 
-                    {!!allCriteriaSelected && !noDataToShow && (
+                    {validRequestParams && !noDataToShow && (
                         <div className="bg-gray-50 p-4 rounded-lg">
                             <div className="space-y-2">
                                 {distributionData.map((item, index) => (
@@ -310,7 +369,9 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                         </p>
                     )}
 
-                    {noDataToShow && <AlertMessage message="No data" />}
+                    {loading && <LoadingOverlay />}
+
+                    {errorSection}
 
                     {!!allCriteriaSelected && !noDataToShow && (
                         <table className="w-full border-collapse border border-gray-200 rounded-lg">
