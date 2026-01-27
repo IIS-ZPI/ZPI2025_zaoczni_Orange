@@ -358,7 +358,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                     {validRequestParams && !noDataToShow && (
                         <div className="bg-gray-50 p-4 rounded-lg relative">
                             <div className="absolute -left-7 top-1/2 -translate-y-1/2 -rotate-90 text-xs text-gray-500 font-medium">
-                                Range
+                                Interval
                             </div>
                             <div className="space-y-2">
                                 {distributionData.map((item, index) => (
@@ -384,7 +384,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                                 ))}
                             </div>
                             <div className="text-center text-xs text-gray-500 mt-4 font-medium">
-                                Count
+                                Count of changes
                             </div>
                         </div>
                     )}
