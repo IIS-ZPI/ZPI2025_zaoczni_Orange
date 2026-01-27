@@ -225,7 +225,7 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                     {analysisPeriod === 'MONTH' ? 'Monthly' : 'Quarterly'} change distribution
                 </h3>
                 {/* Download CSV link */}
-                {!!allCriteriaSelected && (
+                {!!validRequestParams && (
                     <div className="flex justify-end">
                         <CSVLink
                             className="CSV_Button"
@@ -427,28 +427,6 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                             </tbody>
                         </table>
                     )}
-                </div>
-            )}
-
-            {/* Download CSV link */}
-            {!noDataToShow && (
-                <div>
-                    <CSVLink
-                        data={changeDistribution}
-                        filename={`${selectedCurrency1}_${selectedCurrency2}_${beginDate}_${analysisPeriod}.csv`}
-                        onClick={(event: any) => {
-                            if (
-                                !selectedCurrency1 ||
-                                !selectedCurrency2 ||
-                                !beginDate ||
-                                !analysisPeriod
-                            ) {
-                                event.preventDefault();
-                            }
-                        }}
-                    >
-                        Export to CSV
-                    </CSVLink>
                 </div>
             )}
         </div>
