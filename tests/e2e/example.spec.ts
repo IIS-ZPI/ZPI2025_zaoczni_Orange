@@ -18,7 +18,7 @@ test('renders the subtitle description', async ({ page }) => {
     await page.goto('/');
 
     // Check if the subtitle exists
-    await expect(page.getByText('System for statistical analysis of disease states')).toBeVisible();
+    await expect(page.getByText('Statistical analysis system for exchange rates')).toBeVisible();
 });
 
 test('renders header badges', async ({ page }) => {
