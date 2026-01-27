@@ -35,7 +35,7 @@ function App() {
                                     NBP Currency Analyzer
                                 </h1>
                                 <p className="text-sm text-gray-600">
-                                    System for statistical analysis of disease states
+                                    Statistical analysis system for exchange rates
                                 </p>
                             </div>
                         </div>
