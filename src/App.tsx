@@ -7,17 +7,37 @@ import { StatisticalMeasures } from './components/StatisticalMeasures';
 import { Period } from './api/nbpApi';
 import { DistributionAnalysis } from './components/DistributionAnalysis';
 import AlertMessage from './components/AlertMessage';
-import { getUsingMockData, subscribeUsingMockData } from './services/mockDataStatus';
+import { getNbpApiIssue, subscribeNbpApiIssue, type NbpApiIssue } from './services/nbpApiIssue';
 
 const DEFAULT_CURRENCY_CODE = 'USD';
+
+function getApiIssueMessage(issue: NbpApiIssue): string {
+    switch (issue.kind) {
+        case 'offline':
+            return 'No connection to NBP API — check your internet connection';
+        case 'timeout':
+            return 'NBP API request timed out — the service may be slow or unavailable';
+        case 'http_client':
+            return `NBP API error (${issue.httpStatus}) — invalid request or data not available for selected parameters`;
+        case 'http_server':
+            return `NBP API server error (${issue.httpStatus}) — the service is temporarily unavailable`;
+        case 'rate_limit':
+            return 'NBP API rate limit exceeded — please wait a moment and try again';
+        case 'misconfigured':
+            return 'NBP API URL is not configured properly';
+        case 'unknown':
+        default:
+            return `NBP API error — ${issue.details || 'unknown problem occurred'}`;
+    }
+}
 
 function App() {
     const [selectedCurrency, setSelectedCurrency] = useState<string>(DEFAULT_CURRENCY_CODE);
     const [selectedPeriod, setSelectedPeriod] = useState<Period>('MONTH');
-    const [usingMockData, setUsingMockData] = useState<boolean>(() => getUsingMockData());
+    const [apiIssue, setApiIssue] = useState<NbpApiIssue | null>(() => getNbpApiIssue());
 
     useEffect(() => {
-        return subscribeUsingMockData(setUsingMockData);
+        return subscribeNbpApiIssue(setApiIssue);
     }, []);
 
     return (
@@ -55,8 +75,12 @@ function App() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {usingMockData && (
-                    <AlertMessage className="sticky top-4 z-50" message="Invalid data request" />
+                {apiIssue && (
+                    <AlertMessage
+                        className="sticky top-4 z-50"
+                        variant="error"
+                        message={getApiIssueMessage(apiIssue)}
+                    />
                 )}
                 {/* Currency and Period Selection */}
                 <CurrencySelector

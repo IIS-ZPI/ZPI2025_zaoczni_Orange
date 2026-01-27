@@ -4,6 +4,7 @@
 
 import { config } from '../utils/config';
 import { setUsingMockData } from '../services/mockDataStatus';
+import { setNbpApiIssue, clearNbpApiIssue } from '../services/nbpApiIssue';
 
 export type ApiCurrency = {
     currency: string;
@@ -78,6 +79,16 @@ export async function backendGetJson<T>(path: string, options: BackendApiOptions
 
         if (!response.ok) {
             setUsingMockData(true);
+
+            // Classify HTTP errors
+            if (response.status === 429) {
+                setNbpApiIssue({ kind: 'rate_limit', httpStatus: response.status });
+            } else if (response.status >= 400 && response.status < 500) {
+                setNbpApiIssue({ kind: 'http_client', httpStatus: response.status });
+            } else if (response.status >= 500) {
+                setNbpApiIssue({ kind: 'http_server', httpStatus: response.status });
+            }
+
             throw new Error(`HTTP_${response.status}`);
         }
 
@@ -85,6 +96,18 @@ export async function backendGetJson<T>(path: string, options: BackendApiOptions
     } catch (error: any) {
         if (isConnectivityError(error)) {
             setUsingMockData(true);
+
+            // Classify connectivity errors
+            const message = error instanceof Error ? error.message : String(error);
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                setNbpApiIssue({ kind: 'timeout' });
+            } else if (message === 'BACKEND_URL_NOT_CONFIGURED') {
+                setNbpApiIssue({ kind: 'misconfigured' });
+            } else if (message.toLowerCase().includes('failed to fetch')) {
+                setNbpApiIssue({ kind: 'offline' });
+            } else {
+                setNbpApiIssue({ kind: 'unknown', details: message });
+            }
         }
         throw error;
     } finally {
@@ -108,6 +131,7 @@ export async function fetchCodes(): Promise<string[]> {
     const tableA: ApiCurrencyTable[] = await backendGetJson('/exchangerates/tables/A/');
 
     setUsingMockData(false);
+    clearNbpApiIssue();
     const tableAWithType = tableA.map(table => ({ ...table, tableType: 'A' }));
     const currencyCodes = [
         ...new Set(tableAWithType.flatMap(table => table.rates.map(rate => rate.code))),
@@ -155,6 +179,7 @@ export async function fetchLatestCurrencyRateBeforeDate(
     );
 
     setUsingMockData(false);
+    clearNbpApiIssue();
     return precedingRate;
 }
 
@@ -195,6 +220,7 @@ export async function fetchSingleCurrencyRateForDateRange(
     );
 
     setUsingMockData(false);
+    clearNbpApiIssue();
     return ratesTable.rates;
 }
 
