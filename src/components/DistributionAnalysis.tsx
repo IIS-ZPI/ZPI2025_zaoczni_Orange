@@ -356,7 +356,10 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                     {errorSection}
 
                     {validRequestParams && !noDataToShow && (
-                        <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="bg-gray-50 p-4 rounded-lg relative">
+                            <div className="absolute -left-7 top-1/2 -translate-y-1/2 -rotate-90 text-xs text-gray-500 font-medium">
+                                Range
+                            </div>
                             <div className="space-y-2">
                                 {distributionData.map((item, index) => (
                                     <div key={index} className="flex items-center">
@@ -379,6 +382,9 @@ export const DistributionAnalysis: React.FC<DistributionAnalysisProps> = () => {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                            <div className="text-center text-xs text-gray-500 mt-4 font-medium">
+                                Count
                             </div>
                         </div>
                     )}
