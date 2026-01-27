@@ -162,3 +162,16 @@ tr:hover td {
     color: #f97316;
     font-weight: 700;
 }
+
+.CSV_Button {
+    padding: 10px 12px;
+    background-color: #f3f7f9;
+    border: 1px solid #9fc6fa;
+    border-radius: 0.5rem;
+    transition-duration: 0.2s;
+}
+
+.CSV_Button:hover {
+    background-color: #c6edff;
+    border: 1px solid #0b6b97;
+}

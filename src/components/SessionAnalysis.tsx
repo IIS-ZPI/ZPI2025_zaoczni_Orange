@@ -85,9 +85,28 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                Session analysis - {currency}
-            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                    Session analysis - {currency}
+                </h3>
+                <div className="flex justify-end">
+                    {sessionData && sessionData.length > 0 && (
+                        <CSVLink
+                            className="CSV_Button"
+                            data={[
+                                {
+                                    rising: countRisingSessions(sessionData),
+                                    falling: countFallingSessions(sessionData),
+                                    stable: countStableSessions(sessionData),
+                                },
+                            ]}
+                            filename={`${currency}_${period}_trends.csv`}
+                        >
+                            Export to CSV
+                        </CSVLink>
+                    )}
+                </div>
+            </div>
             <p className="text-sm text-gray-600 mb-6">
                 Period: {LABEL_BY_PERIOD[period]} • Total number of sessions:{' '}
                 {sessionData ? countTotalSessions(sessionData) : '---'}
@@ -116,23 +135,6 @@ export const SessionAnalysis: React.FC<SessionAnalysisProps> = ({ currency, peri
                         </div>
                     );
                 })}
-            </div>
-
-            <div>
-                {sessionData && sessionData.length > 0 && (
-                    <CSVLink
-                        data={[
-                            {
-                                rising: countRisingSessions(sessionData),
-                                falling: countFallingSessions(sessionData),
-                                stable: countStableSessions(sessionData),
-                            },
-                        ]}
-                        filename={`${currency}_${period}_trends.csv`}
-                    >
-                        Export to CSV
-                    </CSVLink>
-                )}
             </div>
         </div>
     );

@@ -92,9 +92,30 @@ export const StatisticalMeasures: React.FC<StatisticalMeasuresProps> = ({
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                Statistical measures - {currencyCode}
-            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                    Statistical measures - {currencyCode}
+                </h3>
+                <div className="flex justify-end">
+                    {currencyRates && currencyRates.length > 0 && (
+                        <CSVLink
+                            className="CSV_Button"
+                            data={[
+                                {
+                                    median: calculateMedian(currencyRates),
+                                    mode: calculateMode(currencyRates),
+                                    standardDeviation: calculateStandardDeviation(currencyRates),
+                                    variance: calculateVariance(currencyRates),
+                                },
+                            ]}
+                            filename={`${currencyCode}_${period}_stats.csv`}
+                        >
+                            {/* <Download /> */}
+                            Export to CSV
+                        </CSVLink>
+                    )}
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 {measures.map(measure => {
@@ -115,24 +136,6 @@ export const StatisticalMeasures: React.FC<StatisticalMeasuresProps> = ({
                         </div>
                     );
                 })}
-            </div>
-
-            <div>
-                {currencyRates && currencyRates.length > 0 && (
-                    <CSVLink
-                        data={[
-                            {
-                                median: calculateMedian(currencyRates),
-                                mode: calculateMode(currencyRates),
-                                standardDeviation: calculateStandardDeviation(currencyRates),
-                                variance: calculateVariance(currencyRates),
-                            },
-                        ]}
-                        filename={`${currencyCode}_${period}_stats.csv`}
-                    >
-                        Export to CSV
-                    </CSVLink>
-                )}
             </div>
         </div>
     );
